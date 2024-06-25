@@ -3,7 +3,7 @@ import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 
 // Assuming your GeoJSON file is named constituency.geojson and stored locally
-import constituencyData from './data/constituency.geojson';
+import constituencyData from './public/constituency.geojson';
 
 function MyMap() {
   return (
