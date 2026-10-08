@@ -35,8 +35,12 @@
 *.xlsx  binary
 
 # The 64 MB boundary file is a text format, but it is far too large to be worth
-# diffing or re-normalising, and a line-ending flip would rewrite all 64 MB.
+# diffing or re-normalising, and a line-ending flip would rewrite all of it.
 # Treat it as an opaque blob so it is stored exactly as downloaded.
+#
+# It is still under GitHub's 100 MB hard limit so a normal push works, but it
+# makes every clone slow. See data/source/README.md for the alternative of
+# fetching it on demand instead of committing it.
 data/source/constituency.geojson binary
 
 # SVGs are left to * text=auto above: they are ordinary text and normalising them

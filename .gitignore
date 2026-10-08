@@ -28,6 +28,11 @@
 data/*.exe
 data/scoped_dir*/
 
+# Reference maps kept locally for comparison while building. 65 MB of SVG that
+# no code reads and that git would refuse nothing useful about: kept on disk,
+# out of the repository. If you want them versioned, use Git LFS instead.
+data/reference/
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
