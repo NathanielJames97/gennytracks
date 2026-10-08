@@ -7,16 +7,21 @@ import SeatPanel from './components/SeatPanel';
 import Overview from './components/Overview';
 import Correlate from './components/Correlate';
 import { CensusOverview } from './components/CensusPanel';
-import { useDataset } from './hooks/useData';
+import { useDataFile, useDataset } from './hooks/useData';
 import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD, pct } from './lib/analysis';
+import { simulateUniformSwing } from './lib/scenario';
+import { readShareState, writeShareState, downloadCsv } from './lib/share';
+import HistoryPanel from './components/HistoryPanel';
+import ComparePanel from './components/ComparePanel';
+import ScenarioLab from './components/ScenarioLab';
 import './App.css';
 
 const HOME_BOUNDS = [[49.7, -9.2], [61.2, 2.2]];
 
 /** Fit the map to the UK once, rather than defaulting to [0,0] in the Atlantic. */
-function FitBounds() {
+function FitBounds({ electionId }) {
   const map = useMap();
-  useEffect(() => { map.fitBounds(HOME_BOUNDS); }, [map]);
+  useEffect(() => { map.fitBounds(HOME_BOUNDS); }, [map, electionId]);
   return null;
 }
 
@@ -65,6 +70,9 @@ function pickMetric(props, mode) {
  * legend lists them with counts rather than showing a value ramp.
  */
 function SwingLegend({ summary }) {
+  if (summary?.isNotional) {
+    return <p className="legend-note">Swing is unavailable for notional party totals.</p>;
+  }
   const rows = (summary?.swings ?? []).slice(0, 8);
   return (
     <div className="swing-legend">
@@ -151,13 +159,38 @@ function ModeLegend({ mode, summary }) {
 }
 
 export default function App() {
-  const { seats, summary, boundaries, status, error } = useDataset();
+  const [routeState] = useState(readShareState);
+  const [requestedElectionId, setRequestedElectionId] = useState(routeState.election || '2024');
+  const { manifest, election, electionId, seats, summary, boundaries, status, error } = useDataset(requestedElectionId);
+  const [mode, setMode] = useState(routeState.mode || 'winner');
+  const [partyFilter, setPartyFilter] = useState(routeState.party || null);
+  const [selectedId, setSelectedId] = useState(routeState.seat || null);
+  const [query, setQuery] = useState(routeState.q || '');
+  const [tab, setTab] = useState([
+    'overview', 'census', 'correlate', 'seat', 'history', 'compare', 'scenario', 'list',
+  ].includes(routeState.view) ? routeState.view : 'overview');
+  const [compareId, setCompareId] = useState(routeState.compare || '2019-notional-2024');
+  const [scenario, setScenario] = useState({
+    party: routeState.swingParty || 'Labour',
+    swing: Math.max(-15, Math.min(15, Number(routeState.swing) || 0)),
+  });
+  const [projection, setProjection] = useState(routeState.projection === '1');
+  const [shareStatus, setShareStatus] = useState('');
 
-  const [mode, setMode] = useState('winner');
-  const [partyFilter, setPartyFilter] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const [query, setQuery] = useState('');
-  const [tab, setTab] = useState('overview');
+  const historyFiles = [
+    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2010' ? 'elections/2010.json' : null),
+    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2015' ? 'elections/2015.json' : null),
+    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2017' ? 'elections/2017.json' : null),
+    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2019' ? 'elections/2019.json' : null),
+    useDataFile(tab === 'history' && election?.boundarySetId === '2024' && electionId !== '2019-notional-2024' ? 'elections/2019-notional-2024.json' : null),
+    useDataFile(tab === 'history' && election?.boundarySetId === '2024' && electionId !== '2024' ? 'elections/2024.json' : null),
+  ];
+  const comparisonDescriptor = manifest?.elections?.find((item) => item.id === compareId) || null;
+  const comparisonSeatsFile = useDataFile(tab === 'compare' ? comparisonDescriptor?.resultsFile : null);
+  const comparisonSummaryFile = useDataFile(tab === 'compare' ? comparisonDescriptor?.summaryFile : null);
+  const crosswalkFile = useDataFile(tab === 'history' ? manifest?.boundaryCrosswalkFile : null);
+
+  const setSelected = useCallback((seat) => setSelectedId(seat?.id || null), []);
 
   /**
    * Census metrics become map modes too, declared in the generated summary so
@@ -184,12 +217,15 @@ export default function App() {
   // forward a ref to it, so keep our own id -> layer map. That lets mode and
   // filter changes restyle 650 polygons in place rather than re-parsing them.
   const layersRef = useRef(new Map());
+  const layerElectionRef = useRef(null);
 
   const seatsById = useMemo(() => {
     const map = new Map();
     if (seats) seats.forEach((s) => map.set(s.id, s));
     return map;
   }, [seats]);
+
+  const selectedRecord = selectedId ? seatsById.get(selectedId) : null;
 
   // Per-seat display centre, so selecting a seat from the list can fly the map
   // to it. Computed from the boundary geometry, which is already simplified.
@@ -208,6 +244,44 @@ export default function App() {
     }
     return map;
   }, [boundaries]);
+  const selected = useMemo(() => (
+    selectedRecord ? { ...selectedRecord, centre: centres.get(selectedRecord.id) } : null
+  ), [selectedRecord, centres]);
+
+  const scenarioSeats = useMemo(
+    () => simulateUniformSwing(seats, scenario.party, scenario.swing),
+    [seats, scenario.party, scenario.swing],
+  );
+  const scenarioSeatsById = useMemo(() => new Map((scenarioSeats || []).map((seat) => [seat.id, seat])), [scenarioSeats]);
+
+  useEffect(() => {
+    if (electionId && electionId !== requestedElectionId) setRequestedElectionId(electionId);
+    if (status !== 'ready') return;
+    if (selectedId && !seatsById.has(selectedId)) setSelectedId(null);
+    if (partyFilter && !summary?.parties?.some((party) => party.party === partyFilter)) setPartyFilter(null);
+    const supportedMode = MAP_MODES.some((item) => item.id === mode)
+      || summary?.census?.metrics?.some((metric) => `census:${metric.seatKey}` === mode);
+    if (!supportedMode) setMode('winner');
+    if (['census', 'correlate'].includes(tab) && !summary?.census?.metrics?.length) setTab('overview');
+    if (compareId && (compareId === electionId || !manifest?.elections?.some((item) => item.id === compareId))) {
+      const fallback = manifest?.elections?.find((item) => item.id !== electionId && item.id === '2019-notional-2024')
+        || manifest?.elections?.find((item) => item.id !== electionId);
+      setCompareId(fallback?.id || '');
+    }
+    if (scenario.party && !summary?.parties?.some((party) => party.party === scenario.party)) {
+      setScenario((value) => ({ ...value, party: summary?.parties?.[0]?.party || 'Labour' }));
+    }
+  }, [electionId, requestedElectionId, status, selectedId, seatsById, partyFilter, summary, mode, scenario.party, tab, compareId, manifest]);
+
+  useEffect(() => {
+    writeShareState({
+      election: electionId || requestedElectionId, mode, party: partyFilter, seat: selectedId,
+      view: tab, compare: tab === 'compare' ? compareId : null, query,
+      swingParty: tab === 'scenario' || projection ? scenario.party : null,
+      swing: tab === 'scenario' || projection ? scenario.swing : null,
+      projection,
+    });
+  }, [electionId, requestedElectionId, mode, partyFilter, selectedId, tab, compareId, query, scenario, projection]);
 
   /**
    * The map's metric lives on the boundary feature properties, while the seat
@@ -219,11 +293,12 @@ export default function App() {
     if (!seats || !boundaries) return map;
     const censusMode = activeCensus ? 'census' : null;
     for (const f of boundaries.features) {
-      const seat = seatsById.get(f.properties.id);
-      if (!seat) continue;
+      const baseSeat = seatsById.get(f.properties.id);
+      if (!baseSeat) continue;
+      const seat = projection ? (scenarioSeatsById.get(f.properties.id) || baseSeat) : baseSeat;
       // For census modes, the metric values live on the seat record, not the
       // boundary feature properties. Pass the seat so pickMetric can read them.
-      const metricSource = censusMode ? seat : f.properties;
+      const metricSource = seat;
       const merged = { ...seat, ...pickMetric(metricSource, censusMode || mode) };
       if (censusMode && activeCensus) {
         // Census values are denormalised onto the feature; carry the metric key
@@ -234,7 +309,7 @@ export default function App() {
       map.set(f.properties.id, merged);
     }
     return map;
-  }, [seats, boundaries, seatsById, mode, activeCensus]);
+  }, [seats, boundaries, seatsById, mode, activeCensus, projection, scenarioSeatsById]);
 
   // Restyle in place whenever the metric or filter changes.
   useEffect(() => {
@@ -254,6 +329,10 @@ export default function App() {
 
   // Apply the initial style once features are first added.
   const onEachFeature = useCallback((feature, layer) => {
+    if (layerElectionRef.current !== electionId) {
+      layersRef.current.clear();
+      layerElectionRef.current = electionId;
+    }
     const id = feature.properties.id;
     layersRef.current.set(id, layer);
     const seat = mapSeats.get(id) ?? seatsById.get(id);
@@ -270,7 +349,7 @@ export default function App() {
         if (s) { setSelected({ ...s, centre: centres.get(s.id) }); setTab('seat'); }
       },
     });
-  }, [mapSeats, seatsById, centres, mode]);
+  }, [mapSeats, seatsById, centres, mode, setSelected, electionId]);
 
   const listSeats = useMemo(() => {
     if (!seats) return [];
@@ -297,6 +376,24 @@ export default function App() {
   const counts = partyFilter
     ? listSeats.filter((s) => s.partyGroup === partyFilter).length
     : listSeats.length;
+  const historyDataById = {
+    '2010': electionId === '2010' ? seats : historyFiles[0].data,
+    '2015': electionId === '2015' ? seats : historyFiles[1].data,
+    '2017': electionId === '2017' ? seats : historyFiles[2].data,
+    '2019': electionId === '2019' ? seats : historyFiles[3].data,
+    '2019-notional-2024': electionId === '2019-notional-2024' ? seats : historyFiles[4].data,
+    '2024': electionId === '2024' ? seats : historyFiles[5].data,
+  };
+  const historyElections = manifest?.elections || [];
+  const historyResultSets = historyElections.map((item) => historyDataById[item.id] || []);
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setShareStatus('Link copied');
+    } catch (copyError) {
+      setShareStatus('Copy unavailable in this browser');
+    }
+  };
 
   return (
     <div className="App">
@@ -305,9 +402,28 @@ export default function App() {
           <h1>Genny Tracks</h1>
           <p>
             {summary?.totals
-              ? `UK general election 2024 · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
-              : 'UK general election 2024'}
+              ? `UK general election ${election?.label || election?.year} · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
+              : `UK general election ${election?.label || election?.year || ''}`}
           </p>
+        </div>
+
+        <div className="header-actions">
+          <label className="election-picker">
+            <span>Election</span>
+            <select value={electionId || requestedElectionId} onChange={(event) => {
+              setRequestedElectionId(event.target.value);
+              setSelectedId(null);
+              setPartyFilter(null);
+              setProjection(false);
+              setTab('overview');
+            }}>
+              {(manifest?.elections || []).map((item) => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="header-action" onClick={handleCopyLink}>Copy link</button>
+          <button type="button" className="header-action" onClick={() => downloadCsv(projection ? scenarioSeats : listSeats, election, projection)}>Export CSV</button>
         </div>
 
         <nav className="modes" aria-label="Map shading">
@@ -316,7 +432,7 @@ export default function App() {
               key={m.id}
               type="button"
               className={mode === m.id ? 'mode on' : 'mode'}
-              onClick={() => setMode(m.id)}
+              onClick={() => { setMode(m.id); if (m.id !== 'winner') setProjection(false); }}
               aria-pressed={mode === m.id}
               title={m.hint}
             >
@@ -324,15 +440,18 @@ export default function App() {
             </button>
           ))}
         </nav>
+        {shareStatus && <span className="share-status" role="status">{shareStatus}</span>}
       </header>
 
       <aside className="panel">
         <div className="tabs" role="tablist" aria-label="Side panel">
           {[
             ['overview', 'Overview'],
-            ['census', 'Census'],
-            ['correlate', 'Correlate'],
+            ...(summary?.census?.metrics?.length ? [['census', 'Census'], ['correlate', 'Correlate']] : []),
             ['seat', selected ? selected.name : 'Seat'],
+            ['history', 'History'],
+            ['compare', 'Compare'],
+            ['scenario', 'Scenario'],
             ['list', 'All seats'],
           ].map(([id, label]) => (
             <button
@@ -361,6 +480,7 @@ export default function App() {
           {tab === 'overview' && (
             <Overview
               summary={summary}
+              election={election}
               activeParty={partyFilter}
               onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
             />
@@ -377,7 +497,7 @@ export default function App() {
             />
           )}
           {tab === 'seat' && (
-            <SeatPanel seat={selected} onClose={() => setSelected(null)} />
+            <SeatPanel seat={selected} election={election} onClose={() => setSelected(null)} />
           )}
           {tab === 'list' && (
             <SeatList
@@ -386,6 +506,48 @@ export default function App() {
               onQuery={setQuery}
               selected={selected}
               onSelect={(s) => { setSelected(s); if (s) setTab('seat'); }}
+            />
+          )}
+          {tab === 'history' && (
+            <HistoryPanel
+              seat={selected}
+              election={election}
+              elections={historyElections}
+              resultSets={historyResultSets}
+              crosswalk={crosswalkFile.data?.overlaps || []}
+              onSelectElection={(id) => { setRequestedElectionId(id); setTab('seat'); }}
+              onSelectPlace={(id, year) => { setSelectedId(id); setRequestedElectionId(year); setTab('history'); }}
+            />
+          )}
+          {tab === 'compare' && (
+            <>
+              <label className="compare-picker">
+                <span>Compare with</span>
+                <select value={compareId} onChange={(event) => setCompareId(event.target.value)}>
+                  {historyElections.filter((item) => item.id !== electionId).map((item) => (
+                  <option key={item.id} value={item.id}>{item.label}</option>
+                  ))}
+                </select>
+              </label>
+              <ComparePanel
+                election={election}
+                summary={summary}
+                seats={seats}
+                comparison={comparisonDescriptor}
+                comparisonSummary={comparisonSummaryFile.data}
+                comparisonSeats={comparisonSeatsFile.data}
+                onSelectSeat={(seat) => { setSelected(seat); setTab('seat'); }}
+              />
+            </>
+          )}
+          {tab === 'scenario' && (
+            <ScenarioLab
+              election={election}
+              seats={seats}
+              scenario={scenario}
+              onChange={setScenario}
+              onApply={(enabled) => { setProjection(enabled); if (enabled) setMode('winner'); }}
+              applied={projection}
             />
           )}
         </div>
@@ -397,13 +559,14 @@ export default function App() {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <FitBounds />
+          <FitBounds electionId={electionId} />
           <FlyToSeat seat={selected} />
-          {boundaries && <GeoJSON data={boundaries} onEachFeature={onEachFeature} />}
+          {boundaries && <GeoJSON key={electionId} data={boundaries} onEachFeature={onEachFeature} />}
         </MapContainer>
 
         <div className="map-overlay">
           <ModeLegend mode={mode} summary={summary} />
+          {projection && <p className="projection-flag">Uniform swing illustration</p>}
         </div>
 
         {boundaryLoading(boundaries) && <div className="loading">Loading boundaries…</div>}

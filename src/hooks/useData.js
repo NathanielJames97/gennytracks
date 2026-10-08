@@ -7,11 +7,16 @@ const BASE = `${process.env.PUBLIC_URL || ''}/data`;
  * state. Returns a stable object so callers can destructure without churn.
  */
 export function useDataFile(name) {
-  const [state, setState] = useState({ status: 'loading', data: null, error: null });
+  const [state, setState] = useState({ status: name ? 'loading' : 'idle', data: null, error: null });
 
   useEffect(() => {
+    if (!name) {
+      setState({ status: 'idle', data: null, error: null });
+      return undefined;
+    }
     let cancelled = false;
     const url = `${BASE}/${name}`;
+    setState({ status: 'loading', data: null, error: null });
 
     fetch(url)
       .then((res) => {
@@ -27,18 +32,25 @@ export function useDataFile(name) {
   return state;
 }
 
-/** The three generated files the app needs, fetched together. */
-export function useDataset() {
-  const seats = useDataFile('constituencies.json');
-  const summary = useDataFile('parties.json');
-  const boundaries = useDataFile('boundaries.geojson');
+/** Load the chosen election bundle and its declared boundary epoch. */
+export function useDataset(requestedElectionId = '2024') {
+  const manifest = useDataFile('manifest.json');
+  const descriptor = manifest.data?.elections?.find((item) => item.id === requestedElectionId)
+    || manifest.data?.elections?.find((item) => item.id === manifest.data.defaultElection)
+    || null;
+  const seats = useDataFile(descriptor?.resultsFile || null);
+  const summary = useDataFile(descriptor?.summaryFile || null);
+  const boundaries = useDataFile(descriptor?.boundariesFile || null);
 
   return {
+    manifest: manifest.data,
+    election: descriptor,
+    electionId: descriptor?.id || null,
     seats: seats.data,
     summary: summary.data,
     boundaries: boundaries.data,
-    status: seats.status === 'error' || summary.status === 'error' ? 'error'
-      : seats.status === 'loading' ? 'loading' : 'ready',
-    error: seats.error || summary.error || boundaries.error,
+    status: [manifest, seats, summary, boundaries].some((file) => file.status === 'error') ? 'error'
+      : !descriptor || [seats, summary, boundaries].some((file) => file.status !== 'ready') ? 'loading' : 'ready',
+    error: manifest.error || seats.error || summary.error || boundaries.error,
   };
 }

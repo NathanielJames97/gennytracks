@@ -1,66 +1,69 @@
 # Genny Tracks
 
-An interactive explorer for the **UK general election of 4 July 2024**. A map of
-all 650 constituencies that can be shaded five different ways, backed by the
-verified declarations from the House of Commons Library.
+An interactive history of UK general elections by place. Explore declared results
+from **2010, 2015, 2017, 2019 and 2024**, move between boundary periods, compare
+party outcomes, inspect a constituency's history, and try a clearly labelled
+uniform-swing illustration.
 
-Built with Create React App, React 18 and `react-leaflet` 4. Basemap tiles come
-from OpenStreetMap at runtime; no tiles or boundaries are served from the app.
+The 2019 notional result on 2024 boundaries provides a same-geography bridge to
+the declared 2024 result. It is a published model of party totals, not a second
+set of declared constituency results.
 
-## What it shows
+Built with React 18, Create React App and `react-leaflet` 4. OpenStreetMap tiles
+load at runtime; map boundaries and election results are generated from the
+committed source data.
 
-The map has five modes, switchable from the header:
+## Explore
 
-| Mode | Shades by |
-| --- | --- |
-| **Winner** | Party that won the seat |
-| **Vote share** | Winning candidate's share of the vote |
-| **Swing** | Which party lost each seat, so Labour's gains read as their colour |
-| **Margin** | Winning margin, log-scaled so knife-edge seats stand out |
-| **Turnout** | Votes cast as a share of the electorate |
+The election selector loads six datasets:
 
-The side panel has three views:
+| Election | Constituency geography | What it represents |
+| --- | --- | --- |
+| 2010, 2015, 2017, 2019 | 2010–2019 boundaries | Declared election results on a shared boundary set |
+| 2019 notional · 2024 boundaries | 2024 boundaries | Published notional party totals, modelled for the 2024 seats |
+| 2024 | 2024 boundaries | Declared election results |
 
-- **Overview** — national totals, seats won against vote share, where seats
-  changed hands, seats by region, and the distribution of winning margins.
-- **Seat** — winner, majority, turnout, electorate and the full candidate table
-  with swings on 2019.
-- **All seats** — searchable and sortable list of all 650 seats.
+Map shading includes winner, winning vote share, swing, margin and turnout.
+The side panel adds national summaries, Census 2021 context for 2024, same-seat
+history, election comparisons, a scenario lab and a searchable seat list. The
+selected view, year, seat and filters can be copied as a URL; the displayed
+results can be exported as CSV.
 
-Clicking any bar in the seats-won chart filters the map to that party. Clicking a
-constituency on the map, or a row in the list, opens its detail panel and flies
-the map to it.
-
-Two figures worth noticing, both surfaced in the overview:
-
-- **Reform UK won 5 seats on 14.3% of the vote.** The Liberal Democrats won 72 on
-  12.2%. Seats and votes are very different rankings.
-- **100 seats were decided by fewer than 2,000 votes.** Hendon, the closest, was
-  won by 15 votes out of 41,256 — a 0.036% margin, shown to four decimal places
-  because rounding it to "0.0%" would hide what happened.
+Constituency-by-constituency comparisons are enabled when both elections use
+the same boundary set. Comparisons across the boundary review are described at
+national level and carry a warning. The scenario lab applies a uniform party
+vote-share shift to existing candidate totals. It is an illustration, not a
+forecast. Constituency history also exposes Parliament's official population
+overlap links across the 2024 boundary review; those links describe territory,
+not vote movement.
 
 ## Quick start
 
 ```bash
 npm install
-npm run build:data   # generate public/data and public/photos from data/
-npm start            # http://localhost:3000
+python scripts/export-historical-results.py  # regenerate the normalized history input
+npm run build:data                           # generate public/data and public/photos
+npm start                                    # http://localhost:3000
 ```
 
-`build:data` must run before `start` or `build`; its output is gitignored.
+`build:data` runs before `start` or `build`; its output is gitignored.
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm start` | Dev server with hot reload on port 3000 |
+| `npm start` | Development server with hot reload |
 | `npm run build` | Production bundle into `build/` |
-| `npm run build:data` | Regenerate the data layer from `data/` |
-| `npm test` | Jest via `react-scripts` |
+| `npm run build:data` | Generate election snapshots, boundary files and photos |
+| `python scripts/export-historical-results.py` | Export 2010–2019 and notional 2019 results from Parliament's database |
+| `npm test` | Jest via Create React App |
 | `npm run deploy` | Publish `build/` to the `gh-pages` branch |
 
-See [docs/github-desktop.md](docs/github-desktop.md) for the GitHub Desktop
-workflow, including which paths are committed and which are generated.
+See [docs/data-provenance.md](docs/data-provenance.md) for boundary periods,
+coverage, licenses, source notes and known limits. See
+[docs/moonshot-roadmap.md](docs/moonshot-roadmap.md) for the staged expansion plan
+and [docs/next-session-plan.md](docs/next-session-plan.md) for the next build-system
+milestone. The [GitHub Desktop guide](docs/github-desktop.md) covers the desktop workflow.
 
 To preview a production build locally:
 
@@ -68,100 +71,41 @@ To preview a production build locally:
 npm run build && node scripts/serve.mjs 8080 build
 ```
 
-## Data sources
+## Data pipeline
 
-Three committed inputs under `data/`, none of which are deployed:
+Committed source inputs live under `data/`; generated payloads are written under
+`public/data/` and `public/photos/`.
 
 | Input | Provides |
 | --- | --- |
-| `data/source/hoc/*.csv` | **The vote data.** Official HoC Library declarations: electorate, turnout, votes per party, majorities, all 4,515 candidates |
-| `data/source/constituency.geojson` | 650 seat boundaries |
-| `data/List of MPs elected … Wikipedia.html` | MP portraits and article prose, which HoC does not publish |
+| `data/source/hoc/constituency.csv` and `candidate.csv` | Verified 2024 declarations and full candidate results |
+| `data/source/hoc/psephology.db` | Official election results used for 2010–2019 and the 2019 notional dataset |
+| `data/source/boundaries/constituencies-2019.geojson.gz` | ONS constituency geometry for the 2010–2019 boundary period |
+| `data/source/constituency.geojson` | 2024 constituency geometry |
+| `data/source/census/` | ONS Census 2021 tables and the MSOA-to-constituency lookup |
+| `data/List of MPs elected … Wikipedia.html` | 2024 MP portraits and article prose; never vote totals |
 
-Wikipedia is used only for photos and notes. Every vote figure comes from HoC.
+The pipeline joins results to boundaries by official geographic code, simplifies
+the geometry, and emits an election catalog, one result and summary file per
+election, one boundary file per geography and an official cross-boundary
+population-overlap table. It asserts 650 unique seats per
+election, exact 2024 boundary joins, matching 2010–2019 boundary codes, the
+published 2024 totals and party seat counts, and per-seat vote arithmetic.
 
-### Pipeline
-
-`scripts/build-data.mjs` joins the three sources and writes four files:
-
-| Output | Size | Contents |
-| --- | --- | --- |
-| `public/data/boundaries.geojson` | ~1.9 MB | Simplified WGS84 geometry + shading fields |
-| `public/data/constituencies.json` | ~1.3 MB | 650 seat records with full candidate lists |
-| `public/data/parties.json` | ~32 KB | Totals, vote shares, regions, swing matrix, marginals |
-| `public/photos/*.jpg` | ~1.7 MB | 341 MP portraits, safely renamed |
-
-The geometry source is 64 MB and the generated payload is ~3.2 MB, so
-`build:data` cuts about 95% of it. Coordinates drop from 1,253,898 to 80,181 via
-iterative Douglas-Peucker at 0.002° plus sub-pixel landmass removal. Iterative
-because some coastline rings exceed 100k points and overflow the JS stack when
-recursed.
-
-### Four things about the source data that had to be handled
-
-**The boundaries are in the wrong projection.** `constituency.geojson` declares
-`urn:ogc:def:crs:EPSG::3857` and holds Web Mercator metres. Leaflet expects WGS84
-degrees, so `scripts/lib/reproject.mjs` inverts the projection first.
-
-**Every feature carries a stray hexagon.** The dataset is called
-`uk-constituencies-2024-geo-plus-hex`; each seat has an extra 7-vertex, 1060 km²
-hexbin cell that is *not* on its constituency — Bradford South's sits near 9°E,
-East Thanet's near 13°E, both at sea. `detectHexOverlay()` finds the signature by
-looking for a low-vertex polygon repeated across nearly every feature, rather
-than hardcoding the numbers.
-
-**English regions only.** `CTR_REG` is populated for the 543 English seats and
-blank for the 107 Scottish, Welsh and Northern Irish ones. Those fall back to
-`Country`, giving the conventional nine English regions plus Scotland, Wales and
-Northern Ireland.
-
-**Independent winners are split oddly.** HoC's by-constituency file only has fixed
-vote columns for twelve parties; independents and minor parties land in "All other
-candidates", with "Of which other winner" as a *subset*. Reading those as
-additive broke the vote arithmetic for six seats, which the build now asserts.
-
-### Verification
-
-The pipeline fails rather than producing a plausible-but-wrong map. It checks:
-
-- 650 seats, and party seat counts matching the declared result exactly
-- Published totals: electorate 48,224,212 and 28,809,340 valid votes
-- Per-seat arithmetic: the winner's votes exceed the majority, which cannot
-  exceed votes cast
-- Reprojected bounds fall inside the UK's bounding box, so a projection
-  regression fails the build instead of silently drawing in the ocean
-
-## Layout
-
-```
-scripts/
-  build-data.mjs            pipeline: parse -> join -> reproject -> simplify -> write
-  lib/csv.mjs               RFC 4180 reader
-  lib/hoc.mjs               HoC results loader
-  lib/parse-wikipedia.mjs   MP table and portrait scraper
-  lib/reproject.mjs         EPSG:3857 <-> WGS84
-  lib/simplify.mjs          Douglas-Peucker, ring filtering
-  serve.mjs                 static preview server
-src/
-  App.js                    map modes, panel routing, layer styling
-  components/SeatPanel.jsx  one seat in detail
-  components/SeatList.jsx   searchable table of all seats
-  components/Overview.jsx   national charts
-  components/BarChart.jsx   SVG bar chart and histogram
-  lib/analysis.js           formatting and colour scales
-  hooks/useData.js          data loading
-data/                       committed inputs, not deployed
-public/                     committed shell + generated data, deployed
-```
-
-The map restyles 650 polygons in place when the mode changes, via a layer map
-captured in `onEachFeature`. react-leaflet's `<GeoJSON>` does not forward a ref to
-the `L.GeoJSON` it creates internally, so remounting to restyle was the
-alternative and would re-parse every polygon on each interaction.
+The 2010–2019 boundary geography contains 533 English, 40 Welsh, 59 Scottish
+and 18 Northern Irish seats. The 2024 geography contains 543 English, 32 Welsh,
+57 Scottish and 18 Northern Irish seats. Census 2021 is aggregated to 2024
+boundaries and covers 575 England and Wales seats; it is not historical
+demographic data for earlier elections.
 
 ## Attribution
 
-Results are from the House of Commons Library, CBP-10009, under the Open
-Parliament Licence. MP portraits and constituency names derive from Wikipedia
-(CC BY-SA). Boundary data is Crown copyright / Open Government Licence. Basemap
+Election results for 2024 are from the House of Commons Library under the Open
+Parliament Licence. Historical and notional result data are from the UK
+Parliament Election Results service under the Open Parliament Licence v3.0.
+The 2010–2019 boundary layer is from the Office for National Statistics and
+contains Ordnance Survey data. The 2024 boundary layer is from Automatic
+Knowledge, licensed CC BY 4.0. Census data is from the ONS under the Open
+Government Licence. Individual MP portraits retain the licenses and attribution
+of their respective Wikimedia source files; licenses vary by image. Basemap
 tiles are © OpenStreetMap contributors.

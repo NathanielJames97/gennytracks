@@ -6,7 +6,7 @@ import { num, pct } from '../lib/analysis';
  * National overview: headline totals, seats against votes, and the seat flows
  * that explain where Labour's majority came from.
  */
-export default function Overview({ summary, onSelectParty, activeParty }) {
+export default function Overview({ summary, election, onSelectParty, activeParty }) {
   if (!summary) return null;
   const { totals, parties, voteShare, swings, regions, majorityBands, memberStats } = summary;
 
@@ -62,6 +62,12 @@ export default function Overview({ summary, onSelectParty, activeParty }) {
         </div>
       </div>
 
+      {election?.isNotional && (
+        <p className="boundary-warning">
+          {election.caveat}
+        </p>
+      )}
+
       <h3 className="sub">Seats won</h3>
       <BarChart
         rows={seatRows}
@@ -72,10 +78,6 @@ export default function Overview({ summary, onSelectParty, activeParty }) {
       />
 
       <h3 className="sub">Vote share</h3>
-      <p className="note">
-        Reform UK took 14.3% of the vote nationwide but only 5 seats; the Liberal
-        Democrats took 12.2% and won 72.
-      </p>
       <BarChart
         rows={voteRows}
         max={1}

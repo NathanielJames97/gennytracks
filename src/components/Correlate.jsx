@@ -234,7 +234,7 @@ export default function Correlate({ seats, summary, onSelect, selected }) {
         {r === null ? 'Not enough overlapping seats to measure a relationship.'
           : Math.abs(r) < 0.15
             ? 'Essentially no linear relationship: this census measure did not move the vote much.'
-            : `${xMetric.label} and ${yAxis.label} ${r < 0 ? 'move in opposite directions' : 'move together'} across the 573 English and Welsh seats. Correlation is not causation, and boundaries were redrawn for 2024.`}
+            : `${xMetric.label} and ${yAxis.label} ${r < 0 ? 'move in opposite directions' : 'move together'} across ${points.length} seats with data. Correlation is not causation; Census 2021 values are aggregated to the 2024 constituency boundaries.`}
       </p>
 
       <h3 className="sub">Seats at each end of the census range</h3>

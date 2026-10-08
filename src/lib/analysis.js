@@ -137,6 +137,7 @@ export function colourFor(seat, mode) {
       // Colour by the party that LOST the seat, so one colour consistently
       // means "this seat used to be theirs". Seats with no swing data are
       // distinct from seats that were simply held, which render neutral grey.
+      if (seat.isNotional) return NO_DATA;
       if (seat.resultType !== 'gain') return HELD;
       if (!seat.swingColour) return NO_DATA;
       return seat.swingColour;

@@ -2,8 +2,8 @@
 //
 // Source: ONS Census 2021 topic summaries, via the Nomis bulk download service
 // (https://www.nomisweb.co.uk/sources/census_2021_bulk). England and Wales only
-// -- the census does not cover Scotland or Northern Ireland, so 573 of the 650
-// seats get demographics and 77 do not.
+// -- the census does not cover Scotland or Northern Ireland, so the 575 seats
+// in England and Wales get demographics and the remaining 75 do not.
 //
 // The tables publish at MSOA level (7,264 areas of 2,000-15,000 people), not at
 // constituency level, so each is aggregated up through the ONS best-fit lookup

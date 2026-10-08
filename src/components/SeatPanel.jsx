@@ -7,10 +7,11 @@ import { num, pct, pp, pctAdaptive } from '../lib/analysis';
  * Detail panel for one seat: the winner, the full result table, and any
  * contextual note carried over from the Wikipedia source.
  */
-export default function SeatPanel({ seat, onClose }) {
+export default function SeatPanel({ seat, election, onClose }) {
   const [showAll, setShowAll] = useState(false);
 
   const candidates = useMemo(() => seat?.candidates ?? [], [seat]);
+  const partyTotals = seat?.isNotional || candidates.every((candidate) => !candidate.name);
   const visible = useMemo(
     () => (showAll ? candidates : candidates.filter((c) => c.votes > 0).slice(0, 6)),
     [candidates, showAll],
@@ -44,7 +45,7 @@ export default function SeatPanel({ seat, onClose }) {
           <div className="winner-blank" aria-hidden="true" />
         )}
         <div>
-          <strong>{seat.member || 'No member recorded'}</strong>
+          <strong>{seat.isNotional ? 'Notional party estimate' : seat.member || 'No member recorded'}</strong>
           <span className="tag" style={{ borderColor: seat.colour, color: seat.colour }}>
             {seat.party}
           </span>
@@ -84,11 +85,11 @@ export default function SeatPanel({ seat, onClose }) {
         <p className="meta">Declared at {seat.declarationTime}</p>
       )}
 
-      <h3 className="sub">Candidates</h3>
+      <h3 className="sub">{partyTotals ? 'Party totals' : 'Candidates'}</h3>
       <table className="candidates">
         <thead>
           <tr>
-            <th scope="col">Candidate</th>
+            <th scope="col">{partyTotals ? 'Party' : 'Candidate'}</th>
             <th scope="col">Party</th>
             <th scope="col">Votes</th>
             <th scope="col">Share</th>
@@ -99,7 +100,7 @@ export default function SeatPanel({ seat, onClose }) {
           {visible.map((c, i) => (
             <tr key={`${c.abbrev}-${i}`}>
               <th scope="row">
-                {c.name || '—'}
+                {partyTotals ? c.party : c.name || '—'}
                 {c.sittingMp && <span className="badge" title="Was an MP before this election"> Sitting</span>}
               </th>
               <td>{c.party}</td>
@@ -123,6 +124,14 @@ export default function SeatPanel({ seat, onClose }) {
         <a className="wiki" href={seat.memberWiki} target="_blank" rel="noreferrer">
           Read more on Wikipedia ↗
         </a>
+      )}
+
+      {election?.sourceUrl && (
+        <p className="note muted">
+          Source: <a href={election.sourceUrl} target="_blank" rel="noreferrer">{election.sourceName}</a>
+          {' · '}{election.boundaryLabel} · {election.sourceLicense}.
+          {election.isNotional ? ` ${election.caveat}` : ''}
+        </p>
       )}
 
       <CensusPanel seat={seat} />

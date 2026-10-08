@@ -81,14 +81,28 @@ const BOUNDARIES = {
   }],
 };
 
+const MANIFEST = {
+  defaultElection: '2024',
+  elections: [{
+    id: '2024', year: 2024, label: '2024', boundarySetId: '2024',
+    resultsFile: 'elections/2024.json', summaryFile: 'elections/2024-summary.json',
+    boundariesFile: 'boundaries/2024.geojson',
+  }],
+};
+
 function mockFetch({ seats = [SEAT] } = {}) {
   global.fetch = jest.fn((url) => {
-    const body = url.includes('parties.json') ? SUMMARY
-      : url.includes('boundaries.geojson') ? BOUNDARIES
-        : seats;
+    const body = url.includes('manifest.json') ? MANIFEST
+      : url.includes('2024-summary.json') ? SUMMARY
+        : url.includes('2024.geojson') ? BOUNDARIES
+          : seats;
     return Promise.resolve({ ok: true, json: () => Promise.resolve(body) });
   });
 }
+
+beforeEach(() => {
+  window.history.replaceState({}, '', '/');
+});
 
 afterEach(() => {
   delete global.fetch;

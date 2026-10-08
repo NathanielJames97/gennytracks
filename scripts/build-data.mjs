@@ -37,6 +37,7 @@ import {
 import {
   loadLookup, loadDemographics, DEMOGRAPHIC_METRICS,
 } from './lib/census.mjs';
+import { writeElectionData } from './lib/elections.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -53,9 +54,9 @@ const HOC_DIR = join(ROOT, 'data', 'source', 'hoc');
 const HOC_CONSTITUENCY = join(HOC_DIR, 'constituency.csv');
 const HOC_CANDIDATE = join(HOC_DIR, 'candidate.csv');
 
-// ONS Census 2021, aggregated from MSOA to constituency. England and Wales only:
-// the census does not cover Scotland or Northern Ireland, so 573 of the 650
-// seats carry demographics and 77 do not.
+// ONS Census 2021, aggregated from MSOA to the 2024 constituency boundaries.
+// England and Wales only: 575 of the 650 seats carry demographics; the 57
+// Scottish and 18 Northern Irish seats do not.
 const CENSUS_DIR = join(ROOT, 'data', 'source', 'census');
 const CENSUS_LOOKUP = join(CENSUS_DIR, 'msoa-to-pcon.csv');
 
@@ -243,7 +244,10 @@ function main() {
   // ONS best-fit MSOA -> constituency lookup.
   const censusLookup = loadLookup(CENSUS_LOOKUP);
   const demographics = loadDemographics(CENSUS_DIR, censusLookup);
-  console.log(`  census        ${demographics.size} England & Wales seats (Scotland and NI have no census)`);
+  if (demographics.size !== 575) {
+    throw new Error(`Expected Census coverage for 575 England and Wales seats; found ${demographics.size}`);
+  }
+  console.log(`  census        ${demographics.size} England & Wales seats (57 Scottish and 18 Northern Irish seats have no census)`);
 
   const byKey = new Map(mps.map((m) => [m.key, m]));
   const unmatched = [];
@@ -288,7 +292,9 @@ function main() {
       : null;
 
     const record = {
-      id: key,
+      id: p.GSScode,
+      areaCode: p.GSScode,
+      boundarySetId: '2024',
       name: p.Name,
       region,
       regionCode: p.CRCODE || null,
@@ -358,9 +364,9 @@ function main() {
 
     features.push({
       type: 'Feature',
-      id: p.fid,
+      id: p.GSScode,
       properties: {
-        id: key,
+        id: p.GSScode,
         name: p.Name,
         region,
         regionCode: p.CRCODE || null,
@@ -415,7 +421,7 @@ function main() {
   let missing = 0;
 
   for (const f of features) {
-    const mp = mps.find((m) => m.key === f.properties.id);
+    const mp = byKey.get(normaliseName(f.properties.name));
     if (!mp || !mp.photoFile) continue;
     const src = join(WIKI_PHOTOS, mp.photoFile);
     if (!existsSync(src)) { missing += 1; continue; }
@@ -560,7 +566,7 @@ function main() {
     source: 'House of Commons Library, CBP-10009',
     census: {
       source: 'ONS Census 2021',
-      note: 'England and Wales only; 57 Scottish and 18 Northern Irish seats have no census.',
+      note: 'England and Wales only: 575 seats are covered. The 57 Scottish and 18 Northern Irish seats have no census.',
       seats: seatRecords.filter((s) => s.census).length,
       metrics: censusMetrics,
     },
@@ -594,6 +600,14 @@ function main() {
   const summaryJson = JSON.stringify(summary, null, 1);
   writeFileSync(join(OUT_DIR, 'parties.json'), summaryJson);
 
+  const electionData = writeElectionData({
+    root: ROOT,
+    outDir: OUT_DIR,
+    currentSeats: seatRecords,
+    currentFeatures: features,
+    currentSummary: summary,
+  });
+
   // ----------------------------------------------------------------- report
   const outCoords = features.reduce((n, f) => n + countCoords(f.geometry), 0);
   const outRings = features.reduce((n, f) => n + countRings(f.geometry), 0);
@@ -613,6 +627,8 @@ function main() {
   console.log(`  seats        ${parties.filter((p) => p.seats > 0).length} parties, ${swings.length} distinct seat flows`);
   console.log(`  marginals    ${summary.majorityBands.map((b) => `${b.label}:${b.seats}`).join('  ')}`);
   console.log(`  census       ${summary.census.seats} seats, ${censusMetrics.length} metrics`);
+  console.log(`  elections    ${electionData.descriptors.map((e) => e.label).join(', ')}`);
+  console.log(`  boundary links ${electionData.crosswalk.length} official population-overlap rows`);
   for (const m of censusMetrics) {
     console.log(`                ${m.label.padEnd(24)} p10 ${(m.p10 * 100).toFixed(1)}%  median ${(m.median * 100).toFixed(1)}%  p90 ${(m.p90 * 100).toFixed(1)}%  [domain ${m.domain.map((d) => `${d * 100}%`).join('-')}]`);
   }
