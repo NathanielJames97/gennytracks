@@ -40,7 +40,7 @@ export default function SeatPanel({ seat, election, onClose }) {
 
       <div className="winner">
         {seat.photo ? (
-          <img src={`${process.env.PUBLIC_URL || ''}/${seat.photo}`} alt="" loading="lazy" />
+          <img src={`${import.meta.env.BASE_URL}${seat.photo}`} alt="" loading="lazy" />
         ) : (
           <div className="winner-blank" aria-hidden="true" />
         )}

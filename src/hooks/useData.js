@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const BASE = `${process.env.PUBLIC_URL || ''}/data`;
+const BASE = `${import.meta.env.BASE_URL}data`;
 
 /**
  * Fetch a JSON file from the generated data layer, with loading and error

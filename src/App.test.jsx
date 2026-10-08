@@ -1,21 +1,21 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
-// react-leaflet v4 ships ES modules, which Create React App's Jest config does
-// not transform (node_modules is excluded from Babel). Stub the map out: these
-// tests cover data loading, the party filter and the seat panel, and real
-// Leaflet rendering is verified against a production build in a browser.
-jest.mock('react-leaflet', () => {
-  const React = require('react');
+// Stub the map to keep these tests focused on data loading, the party filter,
+// and the seat panel. Real Leaflet rendering is checked against a production
+// build in a browser.
+vi.mock('react-leaflet', async () => {
+  const React = await import('react');
   return {
     __esModule: true,
     MapContainer: ({ children }) => React.createElement('div', null, children),
     TileLayer: () => null,
     GeoJSON: () => React.createElement('div', { 'data-testid': 'geojson' }),
-    useMap: () => ({ fitBounds: jest.fn(), flyTo: jest.fn(), getZoom: () => 6 }),
+    useMap: () => ({ fitBounds: () => {}, flyTo: () => {}, getZoom: () => 6 }),
   };
 });
-jest.mock('leaflet/dist/leaflet.css', () => ({}));
+vi.mock('leaflet/dist/leaflet.css', () => ({}));
 
 const SEAT = {
   id: 'boston and skegness',
@@ -91,7 +91,7 @@ const MANIFEST = {
 };
 
 function mockFetch({ seats = [SEAT] } = {}) {
-  global.fetch = jest.fn((url) => {
+  global.fetch = vi.fn((url) => {
     const body = url.includes('manifest.json') ? MANIFEST
       : url.includes('2024-summary.json') ? SUMMARY
         : url.includes('2024.geojson') ? BOUNDARIES
@@ -106,7 +106,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete global.fetch;
-  jest.resetAllMocks();
+  vi.resetAllMocks();
 });
 
 test('loads and shows national totals', async () => {
@@ -190,8 +190,20 @@ test('searching filters the seat list', async () => {
   expect(screen.queryByText('Boston and Skegness')).not.toBeInTheDocument();
 });
 
+test("uses Vite's public base for generated data and portraits", async () => {
+  mockFetch({ seats: [{ ...SEAT, photo: 'photos/richard-tice.jpg' }] });
+  const { container } = render(<App />);
+
+  await screen.findByRole('button', { name: 'Turnout' });
+  const base = import.meta.env.BASE_URL;
+  expect(global.fetch).toHaveBeenCalledWith(`${base}data/manifest.json`);
+
+  fireEvent.click(screen.getByRole('tab', { name: 'All seats' }));
+  fireEvent.click(await screen.findByRole('row', { name: /Boston and Skegness/ }));
+  expect(container.querySelector('img[loading="lazy"]')).toHaveAttribute('src', `${base}photos/richard-tice.jpg`);
+});
 test('reports a helpful error when the data layer is missing', async () => {
-  global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 404, statusText: 'Not Found' }));
+  global.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 404, statusText: 'Not Found' }));
 
   render(<App />);
 

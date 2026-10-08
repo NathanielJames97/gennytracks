@@ -9,9 +9,10 @@ The 2019 notional result on 2024 boundaries provides a same-geography bridge to
 the declared 2024 result. It is a published model of party totals, not a second
 set of declared constituency results.
 
-Built with React 18, Create React App and `react-leaflet` 4. OpenStreetMap tiles
-load at runtime; map boundaries and election results are generated from the
-committed source data.
+Built with React 18, Vite and **react-leaflet 4**. OpenStreetMap tiles load at
+runtime; map boundaries and election results are generated from the committed
+source data. Node.js must be **^22.12.0**, **^24.0.0**, or **>=26.0.0** for the
+Vite and Vitest toolchain.
 
 ## Explore
 
@@ -39,51 +40,58 @@ not vote movement.
 
 ## Quick start
 
-```bash
+~~~bash
 npm install
 python scripts/export-historical-results.py  # regenerate the normalized history input
 npm run build:data                           # generate public/data and public/photos
-npm start                                    # http://localhost:3000
-```
+npm start                                    # Vite dev server at http://localhost:5173
+~~~
 
-`build:data` runs before `start` or `build`; its output is gitignored.
+The Vite build uses relative asset paths, so the generated **dist/** directory
+can be hosted at a site root or beneath a project subpath. The data generator
+writes to **public/data/** and **public/photos/**; Vite copies those files into
+**dist/** during production build.
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm start` | Development server with hot reload |
-| `npm run build` | Production bundle into `build/` |
-| `npm run build:data` | Generate election snapshots, boundary files and photos |
-| `python scripts/export-historical-results.py` | Export 2010–2019 and notional 2019 results from Parliament's database |
-| `npm test` | Jest via Create React App |
-| `npm run deploy` | Publish `build/` to the `gh-pages` branch |
+| npm start | Vite development server with hot reload |
+| npm run build | Generate election data, then build the production bundle into dist/ |
+| npm run build:data | Generate election snapshots, boundary files and photos |
+| python scripts/export-historical-results.py | Export 2010–2019 and notional 2019 results from Parliament's database |
+| npm test | Run the Vitest and React Testing Library suite |
+| npm run test:watch | Run Vitest in watch mode |
+| npm run preview | Preview the production build locally |
+| npm run deploy | Publish dist/ to the gh-pages branch |
 
 See [docs/data-provenance.md](docs/data-provenance.md) for boundary periods,
 coverage, licenses, source notes and known limits. See
-[docs/moonshot-roadmap.md](docs/moonshot-roadmap.md) for the staged expansion plan
-and [docs/next-session-plan.md](docs/next-session-plan.md) for the next build-system
-milestone. The [GitHub Desktop guide](docs/github-desktop.md) covers the desktop workflow.
+[docs/moonshot-roadmap.md](docs/moonshot-roadmap.md) for the staged expansion
+plan and [docs/next-session-plan.md](docs/next-session-plan.md) for the Vite
+migration record. The [GitHub Desktop guide](docs/github-desktop.md) covers the
+desktop workflow.
 
-To preview a production build locally:
+To build and preview locally:
 
-```bash
-npm run build && node scripts/serve.mjs 8080 build
-```
+~~~bash
+npm run build
+npm run preview
+~~~
 
 ## Data pipeline
 
-Committed source inputs live under `data/`; generated payloads are written under
-`public/data/` and `public/photos/`.
+Committed source inputs live under **data/**; generated payloads are written
+under **public/data/** and **public/photos/**.
 
 | Input | Provides |
 | --- | --- |
-| `data/source/hoc/constituency.csv` and `candidate.csv` | Verified 2024 declarations and full candidate results |
-| `data/source/hoc/psephology.db` | Official election results used for 2010–2019 and the 2019 notional dataset |
-| `data/source/boundaries/constituencies-2019.geojson.gz` | ONS constituency geometry for the 2010–2019 boundary period |
-| `data/source/constituency.geojson` | 2024 constituency geometry |
-| `data/source/census/` | ONS Census 2021 tables and the MSOA-to-constituency lookup |
-| `data/List of MPs elected … Wikipedia.html` | 2024 MP portraits and article prose; never vote totals |
+| data/source/hoc/constituency.csv and candidate.csv | Verified 2024 declarations and full candidate results |
+| data/source/hoc/psephology.db | Official election results used for 2010–2019 and the 2019 notional dataset |
+| data/source/boundaries/constituencies-2019.geojson.gz | ONS constituency geometry for the 2010–2019 boundary period |
+| data/source/constituency.geojson | 2024 constituency geometry |
+| data/source/census/ | ONS Census 2021 tables and the MSOA-to-constituency lookup |
+| data/List of MPs elected … Wikipedia.html | 2024 MP portraits and article prose; never vote totals |
 
 The pipeline joins results to boundaries by official geographic code, simplifies
 the geometry, and emits an election catalog, one result and summary file per

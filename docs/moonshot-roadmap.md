@@ -34,18 +34,31 @@ votes to a newly drawn seat.
 **Why first:** every later feature depends on consistent election and geography
 records.
 
-- Move from Create React App to Vite while retaining React Leaflet and static
-  deployment.
+- **Complete:** Move from Create React App to Vite while retaining React
+  Leaflet and static deployment. The Vite build uses a relative base and was
+  verified from both the site root and a project subpath.
+- **Complete:** Add a production-browser smoke path for changing election,
+  comparing 2019 notional with 2024, opening constituency history, applying a
+  swing scenario, copying a link and downloading CSV. Local headless browser
+  checks passed with 650 map features and successful data, boundary, icon,
+  manifest and OpenStreetMap tile requests.
+- **Verified:** npm ci --include=optional, npm run build:data, npm test
+  (7 tests) and npm run build pass. The generated data fingerprint stayed
+  identical across the migration: 361 files, 20,653,607 bytes, SHA-256
+  6b874d0ae8aa1db0e1aa2806b8b617c36a034e1b73ee5e921375d04e5d28f57a.
+- **Constraint:** Vite and Vitest require Node.js ^22.12.0, ^24.0.0 or >=26.0.0.
+  Validation used the bundled Node.js 24.19.0 because the machine default is
+  20.2.0. Deployed-host routing and human visual review are still pending.
 - Add a versioned schema for election records, summaries, maps and crosswalks.
 - Add data-pipeline checks for source totals, per-seat candidate arithmetic,
   boundary coverage, license metadata and export reproducibility.
 - Keep generated election files split by year and boundary epoch; publish
   precompressed JSON or use a static host that serves Brotli/gzip.
-- Add a small real-browser smoke path for changing election, opening history,
-  comparing 2019 notional with 2024, copying a link and downloading CSV.
 
 **Done when:** a fresh checkout can rebuild all datasets, the browser can load
-each snapshot, and source changes fail with a clear diagnostic.
+each snapshot, and source changes fail with a clear diagnostic. Schema
+versioning, broader pipeline checks and compression remain open; deployed-host
+routing and a human visual review also remain to be checked.
 
 ### 2. Extend the archive before 2010
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Minimal static file server for previewing the production build.
 //   node scripts/serve.mjs [port] [dir]
-// Not part of the app; CRA's own dev server handles development.
+// Use Vite's dev server for development; this helper serves a built dist/ directory.
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 
 const port = Number(process.argv[2] || 8080);
-const root = process.argv[3] || 'build';
+const root = process.argv[3] || 'dist';
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',

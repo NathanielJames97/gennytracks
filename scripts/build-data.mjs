@@ -17,8 +17,8 @@
  * absorbs, so the join is a clean 650/650 with no fuzzy matching.
  *
  * Note the 64 MB source geometry deliberately lives under data/, not public/:
- * Create React App copies everything in public/ verbatim into the build output,
- * so anything sitting there ships to every visitor.
+ * Vite copies everything in public/ verbatim into dist/ during production
+ * builds, so anything sitting there ships to every visitor.
  */
 
 import {
