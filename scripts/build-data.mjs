@@ -30,6 +30,10 @@ import { fileURLToPath } from 'node:url';
 import { parseWikipediaHtml, normaliseName } from './lib/parse-wikipedia.mjs';
 import { simplifyGeometry, countCoords, countRings } from './lib/simplify.mjs';
 import { reprojectGeometry, boundsOf } from './lib/reproject.mjs';
+import {
+  loadConstituencyResults, loadCandidateResults, nationalTotals, partyName,
+  PARTY_NAMES,
+} from './lib/hoc.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -40,6 +44,11 @@ const WIKI_HTML = join(
 );
 const WIKI_PHOTOS = `${WIKI_HTML.replace(/\.html$/, '')}_files`;
 const SOURCE_GEOJSON = join(ROOT, 'data', 'source', 'constituency.geojson');
+
+// Official results from House of Commons Library research brief CBP-10009.
+const HOC_DIR = join(ROOT, 'data', 'source', 'hoc');
+const HOC_CONSTITUENCY = join(HOC_DIR, 'constituency.csv');
+const HOC_CANDIDATE = join(HOC_DIR, 'candidate.csv');
 
 const OUT_DIR = join(ROOT, 'public', 'data');
 const OUT_PHOTOS = join(ROOT, 'public', 'photos');
@@ -53,8 +62,10 @@ const SIMPLIFY = {
   maxPolygons: 60,      // landmasses per seat; keeps Islay, drops the 4000 Arran rocks
 };
 
-// Canonical colours. Wikipedia supplies a swatch per row, but the Speaker has
-// none, so every party also needs a fallback for records the article omits.
+// Party colours, as used for the swatches in the Wikipedia MPs table, so the
+// map stays consistent with that source. These are display conventions rather
+// than official brand values -- Green and the Northern Irish parties differ
+// between sources -- so treat them as approximate.
 const PARTY_COLOURS = {
   Labour: '#E4003B',
   Conservative: '#0087DC',
@@ -68,6 +79,37 @@ const PARTY_COLOURS = {
   Green: '#5EB646',
   Independent: '#7A7A7A',
   Speaker: '#9E9E9E',
+  Alliance: '#F6CB2F',
+  'Ulster Unionist': '#48A5EE',
+  'Traditional Unionist Voice': '#0C3A6A',
+};
+
+/**
+ * The HoC "gain from X" text spells the previous holder out ("gain from Con"),
+ * but its First/Second party columns use abbreviations. Resolve the spelled-out
+ * name back to an abbreviation so the caller gets consistent keys.
+ */
+function abbrevToHoC(name) {
+  const trimmed = String(name || '').trim();
+  const byName = Object.entries(PARTY_NAMES).find(([, v]) => v === trimmed);
+  if (byName) return byName[0];
+  // Already an abbreviation, or a name with no mapping: pass through.
+  return trimmed;
+}
+
+/** Diverging pair for gain maps, keyed by the party that lost the seat. */
+const SWING_COLOURS = {
+  Labour: '#C81B4A',
+  Conservative: '#1F6FB4',
+  'Liberal Democrats': '#D98A1F',
+  'Scottish National': '#C9A227',
+  'Reform UK': '#12B6CF',
+  'Democratic Unionist': '#D46A4C',
+  'Sinn Féin': '#00654F',
+  'Social Democratic and Labour': '#2AA82C',
+  'Plaid Cymru': '#005B54',
+  Green: '#5EB646',
+  Independent: '#7A7A7A',
 };
 
 const mb = (n) => `${(n / 1048576).toFixed(2)} MB`;
@@ -175,10 +217,24 @@ function main() {
     console.log('  hex overlay   none detected');
   }
 
+  // ------------------------------------------------------ official results
+  // House of Commons Library verified declarations. These carry the vote data
+  // the Wikipedia table lacks entirely: electorate, turnout, per-party votes,
+  // majority and swing. Where the two sources overlap, HoC wins; Wikipedia is
+  // kept for MP portraits and article prose that HoC does not publish.
+  const hocSeats = loadConstituencyResults(HOC_CONSTITUENCY);
+  const hocCandidates = loadCandidateResults(HOC_CANDIDATE);
+  const national = nationalTotals(hocCandidates);
+  const hocByKey = new Map(hocSeats.map((s) => [normaliseName(s.name), s]));
+  console.log(`  hoc seats     ${hocSeats.length} rows, ${national.parties.length} parties`);
+  console.log(`  hoc candidates ${hocCandidates.size} seats covered (${[...hocCandidates.values()].reduce((n, l) => n + l.length, 0)} candidates)`);
+
   const byKey = new Map(mps.map((m) => [m.key, m]));
   const unmatched = [];
+  const missingHoc = [];
   const seen = new Set();
   const features = [];
+  const seatRecords = [];
   let hexStripped = 0;
 
   for (const f of raw.features) {
@@ -189,6 +245,9 @@ function main() {
     if (seen.has(key)) { unmatched.push(`${p.Name} (duplicate)`); continue; }
     seen.add(key);
 
+    const hoc = hocByKey.get(key);
+    if (!hoc) missingHoc.push(p.Name);
+
     const before = f.geometry?.coordinates?.length ?? 0;
     const cleaned = stripHexOverlay(f, hex);
     if (hex && cleaned && (cleaned.coordinates?.length ?? 0) < before) hexStripped += 1;
@@ -196,12 +255,73 @@ function main() {
     const geometry = simplifyGeometry(reprojectGeometry(cleaned), SIMPLIFY);
     if (!geometry) continue; // entirely sub-pixel seat: nothing to draw
 
-    const colour = mp.colour || PARTY_COLOURS[mp.partyGroup] || '#7A7A7A';
+    const partyGroup = mp.partyGroup;
+    const colour = mp.colour || PARTY_COLOURS[partyGroup] || '#7A7A7A';
 
     // CTR_REG only covers the English regions in the source; the 107 Scottish,
     // Welsh and Northern Irish seats come through blank. Country is the level
-    // those are conventionally reported at, so use it as the fallback.
-    const region = p.CTR_REG || p.Country || null;
+    // those are conventionally reported at, so use it as the fallback. HoC
+    // names all four nations consistently, so prefer it where available.
+    const region = hoc?.region || p.CTR_REG || p.Country || null;
+
+    // Share of the vote for the winning party, and the gap to the runner-up.
+    const votes = hoc?.votes ?? null;
+    const winnerVotes = hoc ? (votes[hoc.firstParty] ?? null) : null;
+    const winnerShare = hoc && hoc.validTotal && winnerVotes
+      ? winnerVotes / hoc.validTotal
+      : null;
+
+    const record = {
+      id: key,
+      name: p.Name,
+      region,
+      regionCode: p.CRCODE || null,
+      country: hoc?.country || p.Country,
+      gss: p.GSScode,
+      type: p.Type,
+      // Electorate: HoC is the declared figure and differs slightly from the
+      // ONS register snapshot in the boundary file.
+      electorate: hoc?.electorate ?? p.Electorate,
+      member: hoc?.member || mp.member,
+      memberGender: hoc?.memberGender ?? null,
+      memberWiki: mp.memberWiki,
+      memberSort: mp.memberSort,
+      party: mp.party,
+      partyGroup,
+      colour,
+      photo: null, // filled in during the photo pass
+      notes: mp.notes,
+      // --- results, from HoC ---
+      result: hoc?.result ?? null,
+      resultType: hoc?.resultType ?? null,
+      firstParty: hoc ? partyName(hoc.firstParty) : partyGroup,
+      firstPartyAbbrev: hoc?.firstParty ?? null,
+      secondParty: hoc ? partyName(hoc.secondParty) : null,
+      secondPartyAbbrev: hoc?.secondParty ?? null,
+      gainedFrom: hoc?.lost ? partyName(abbrevToHoC(hoc.lost)) : null,
+      majority: hoc?.majority ?? null,
+      majorityShare: hoc && hoc.validTotal ? (hoc.majority ?? 0) / hoc.validTotal : null,
+      validVotes: hoc?.validVotes ?? null,
+      invalidVotes: hoc?.invalidVotes ?? null,
+      turnout: hoc?.turnout ?? null,
+      winnerVotes,
+      winnerShare,
+      votes: votes ?? undefined,
+      declarationTime: hoc?.declarationTime ?? null,
+      candidates: (hocCandidates.get(p.Name) ?? []).map((c) => ({
+        name: c.name,
+        party: c.party,
+        abbrev: c.abbrev,
+        gender: c.gender,
+        votes: c.votes,
+        share: c.share,
+        change: c.change,
+        sittingMp: c.sittingMp,
+        formerMp: c.formerMp,
+      })),
+    };
+
+    seatRecords.push(record);
 
     features.push({
       type: 'Feature',
@@ -211,16 +331,23 @@ function main() {
         name: p.Name,
         region,
         regionCode: p.CRCODE || null,
-        country: p.Country,
+        country: record.country,
         gss: p.GSScode,
         type: p.Type,
-        electorate: p.Electorate,
-        member: mp.member,
+        electorate: record.electorate,
+        member: record.member,
         memberWiki: mp.memberWiki,
         memberSort: mp.memberSort,
         party: mp.party,
-        partyGroup: mp.partyGroup,
+        partyGroup,
         colour,
+        // Second colour used by the swing map: the party that lost the seat.
+        swingFrom: record.gainedFrom,
+        swingColour: record.gainedFrom ? (SWING_COLOURS[record.gainedFrom] ?? '#7A7A7A') : null,
+        resultType: record.resultType,
+        winnerShare: record.winnerShare,
+        majority: record.majority,
+        turnout: record.turnout,
         photo: null, // filled in during the photo pass
         notes: mp.notes,
       },
@@ -233,6 +360,9 @@ function main() {
   if (hex) console.log(`  hex removed   from ${hexStripped} features`);
   if (unmatched.length) {
     console.warn(`  ! geojson seats with no MP row: ${unmatched.join(', ')}`);
+  }
+  if (missingHoc.length) {
+    console.warn(`  ! seats with no HoC results row: ${missingHoc.join(', ')}`);
   }
   if (orphanMps.length) {
     console.warn(`  ! MP rows with no geojson seat: ${orphanMps.map((m) => m.constituency).join(', ')}`);
@@ -275,47 +405,146 @@ function main() {
   const boundaryJson = JSON.stringify(boundaries);
   writeFileSync(join(OUT_DIR, 'boundaries.geojson'), boundaryJson);
 
-  // The companion index omits geometry entirely, so the app can load a small
-  // file for lists/search/colouring and pull boundaries.geojson only for the map.
-  const index = features.map((f) => f.properties);
-  writeFileSync(join(OUT_DIR, 'constituencies.json'), JSON.stringify(index, null, 0));
+  // The companion index carries no geometry, so the app can load a modest file
+  // for lists, search, filtering and charts, and pull boundaries.geojson only
+  // when the map needs it.
+  const indexJson = JSON.stringify(seatRecords);
+  writeFileSync(join(OUT_DIR, 'constituencies.json'), indexJson);
 
+  // --- summary: seat counts, vote shares, regions, swing, marginals --------
   const seats = {};
-  for (const p of index) {
-    const g = p.partyGroup;
-    if (!seats[g]) seats[g] = { party: g, seats: 0, colour: p.colour };
+  for (const s of seatRecords) {
+    const g = s.partyGroup;
+    if (!seats[g]) {
+      seats[g] = { party: g, seats: 0, gains: 0, holds: 0, colour: s.colour };
+    }
     seats[g].seats += 1;
+    if (s.resultType === 'gain') seats[g].gains += 1;
+    else seats[g].holds += 1;
   }
   const parties = Object.values(seats).sort((a, b) => b.seats - a.seats);
 
-  const regionSeats = {};
-  for (const p of index) {
-    const r = p.region || 'Unknown';
-    regionSeats[r] = (regionSeats[r] || 0) + 1;
+  // Nationwide vote share, which is a different ordering from seats: Reform UK
+  // won 5 seats on 14.3% of the vote, the Lib Dems 72 on 12.2%.
+  const voteShare = national.parties.map((p) => ({
+    abbrev: p.abbrev,
+    party: p.name,
+    votes: p.votes,
+    share: p.share,
+    seats: seats[p.name]?.seats ?? 0,
+    colour: PARTY_COLOURS[p.name] ?? '#7A7A7A',
+  }));
+
+  const regionRows = new Map();
+  for (const s of seatRecords) {
+    const r = s.region || 'Unknown';
+    if (!regionRows.has(r)) {
+      regionRows.set(r, { region: r, country: s.country, seats: 0, electorate: 0, validVotes: 0, parties: {} });
+    }
+    const row = regionRows.get(r);
+    row.seats += 1;
+    row.electorate += s.electorate ?? 0;
+    row.validVotes += s.validVotes ?? 0;
+    row.parties[s.partyGroup] = (row.parties[s.partyGroup] ?? 0) + 1;
   }
-  const regions = Object.entries(regionSeats)
-    .map(([region, n]) => ({ region, seats: n }))
+  const regions = [...regionRows.values()]
+    .map((r) => ({
+      ...r,
+      turnout: r.electorate ? r.validVotes / r.electorate : null,
+    }))
     .sort((a, b) => b.seats - a.seats);
 
-  writeFileSync(
-    join(OUT_DIR, 'parties.json'),
-    JSON.stringify({ total: index.length, parties, regions }, null, 2),
-  );
+  // Seat-to-seat movement: which parties took seats from whom.
+  const swingMatrix = {};
+  for (const s of seatRecords) {
+    if (s.resultType !== 'gain' || !s.gainedFrom) continue;
+    const key = `${s.partyGroup}<-${s.gainedFrom}`;
+    swingMatrix[key] = (swingMatrix[key] ?? 0) + 1;
+  }
+  const swings = Object.entries(swingMatrix)
+    .map(([key, count]) => {
+      const [won, lost] = key.split('<-');
+      return { from: lost, to: won, count };
+    })
+    .sort((a, b) => b.count - a.count);
+
+  // Marginals: closest races, ranked by the winner's margin over the runner-up.
+  const marginals = seatRecords
+    .filter((s) => Number.isFinite(s.majority))
+    .sort((a, b) => a.majority - b.majority)
+    .slice(0, 50)
+    .map((s) => ({
+      id: s.id, name: s.name, region: s.region,
+      majority: s.majority, majorityShare: s.majorityShare,
+      party: s.partyGroup, colour: s.colour, member: s.member,
+    }));
+
+  // Distribution of majorities as a share of votes cast, for the histogram.
+  const majorityBands = [
+    { label: '0-1k', min: 0, max: 1000 },
+    { label: '1-2k', min: 1000, max: 2000 },
+    { label: '2-5k', min: 2000, max: 5000 },
+    { label: '5-10k', min: 5000, max: 10000 },
+    { label: '10-15k', min: 10000, max: 15000 },
+    { label: '15k+', min: 15000, max: Infinity },
+  ].map((b) => ({
+    ...b,
+    max: Number.isFinite(b.max) ? b.max : null,
+    seats: seatRecords.filter((s) => Number.isFinite(s.majority) && s.majority >= b.min && s.majority < b.max).length,
+  }));
+
+  const summary = {
+    total: seatRecords.length,
+    generated: '2024 general election, 4 July',
+    source: 'House of Commons Library, CBP-10009',
+    totals: {
+      electorate: seatRecords.reduce((n, s) => n + (s.electorate ?? 0), 0),
+      validVotes: national.votes,
+      invalidVotes: seatRecords.reduce((n, s) => n + (s.invalidVotes ?? 0), 0),
+      candidates: [...hocCandidates.values()].reduce((n, l) => n + l.length, 0),
+      turnout: national.votes / seatRecords.reduce((n, s) => n + (s.electorate ?? 0), 0),
+    },
+    parties,
+    voteShare,
+    regions,
+    swings,
+    marginals,
+    majorityBands,
+    // Incumbency: how many winners were sitting MPs, first-timers, etc.
+    memberStats: {
+      reelected: seatRecords.filter((s) => s.resultType === 'hold').length,
+      newMPs: [...hocCandidates.values()]
+        .filter((l) => l[0] && !l[0].formerMp)
+        .length,
+      byGender: seatRecords.reduce((acc, s) => {
+        const g = s.memberGender || 'Unknown';
+        acc[g] = (acc[g] ?? 0) + 1;
+        return acc;
+      }, {}),
+    },
+  };
+
+  const summaryJson = JSON.stringify(summary, null, 1);
+  writeFileSync(join(OUT_DIR, 'parties.json'), summaryJson);
 
   // ----------------------------------------------------------------- report
   const outCoords = features.reduce((n, f) => n + countCoords(f.geometry), 0);
   const outRings = features.reduce((n, f) => n + countRings(f.geometry), 0);
   const boundaryBytes = Buffer.byteLength(boundaryJson);
-  const indexBytes = Buffer.byteLength(JSON.stringify(index));
+  const indexBytes = Buffer.byteLength(indexJson);
 
+  const summaryBytes = Buffer.byteLength(summaryJson);
   console.log('\n  output');
   console.log(`    boundaries.geojson    ${mb(boundaryBytes).padStart(9)}  ${pct(boundaryBytes, rawBytes)} vs source`);
-  console.log(`    constituencies.json   ${mb(indexBytes).padStart(9)}  ${index.length} seats, no geometry`);
-  console.log(`    parties.json          ${mb(Buffer.byteLength(JSON.stringify(parties))).padStart(9)}  ${parties.length} parties`);
+  console.log(`    constituencies.json   ${mb(indexBytes).padStart(9)}  ${seatRecords.length} seats + candidates, no geometry`);
+  console.log(`    parties.json          ${mb(summaryBytes).padStart(9)}  totals, vote shares, regions, swing, marginals`);
   console.log(`\n  coordinates  ${rawCoords.toLocaleString()} -> ${outCoords.toLocaleString()} (${pct(outCoords, rawCoords)})`);
   console.log(`  rings        ${rawRings.toLocaleString()} -> ${outRings.toLocaleString()}`);
   console.log(`  wgs84 bounds ${outBounds.map((n) => n.toFixed(3)).join(', ')}`);
-  console.log(`  combined payload ${mb(boundaryBytes + indexBytes)} (was ${mb(rawBytes)})\n`);
+  console.log(`  combined payload ${mb(boundaryBytes + indexBytes + summaryBytes)} (was ${mb(rawBytes)})`);
+  console.log(`\n  turnout      ${(summary.totals.turnout * 100).toFixed(1)}% of ${summary.totals.electorate.toLocaleString()} electors`);
+  console.log(`  seats        ${parties.filter((p) => p.seats > 0).length} parties, ${swings.length} distinct seat flows`);
+  console.log(`  marginals    ${summary.majorityBands.map((b) => `${b.label}:${b.seats}`).join('  ')}\n`);
 
   // A reprojection mistake is silent and catastrophic (a map that renders in the
   // ocean), so assert the UK actually lands where the UK is.
@@ -326,13 +555,67 @@ function main() {
     );
   }
 
+  // --- assertions -----------------------------------------------------------
+  // Everything below has bitten in practice: a silent regression here produces
+  // a map that looks plausible but is wrong.
+
   const totalSeats = parties.reduce((n, p) => n + p.seats, 0);
-  if (totalSeats !== index.length) {
-    throw new Error(`Party seat counts sum to ${totalSeats}, expected ${index.length}`);
+  if (totalSeats !== seatRecords.length) {
+    throw new Error(`Party seat counts sum to ${totalSeats}, expected ${seatRecords.length}`);
   }
-  if (index.length !== 650) {
-    console.warn(`  ! expected 650 seats, got ${index.length}`);
+  if (seatRecords.length !== 650) {
+    throw new Error(`Expected 650 seats, got ${seatRecords.length}`);
   }
+
+  // Published totals for the 2024 general election. If these drift, the source
+  // files changed shape and the parse needs revisiting.
+  const EXPECTED = {
+    electorate: 48224212,
+    validVotes: 28809340,
+  };
+  if (summary.totals.electorate !== EXPECTED.electorate) {
+    throw new Error(
+      `Electorate ${summary.totals.electorate.toLocaleString()} != published ${EXPECTED.electorate.toLocaleString()}`,
+    );
+  }
+  if (national.votes !== EXPECTED.validVotes) {
+    throw new Error(
+      `Valid votes ${national.votes.toLocaleString()} != published ${EXPECTED.validVotes.toLocaleString()}`,
+    );
+  }
+
+  // The declared seat counts, so a party-mapping mistake cannot pass silently.
+  const EXPECTED_SEATS = {
+    Labour: 411, Conservative: 121, 'Liberal Democrats': 72, 'Scottish National': 9,
+    'Sinn Féin': 7, Independent: 6, 'Reform UK': 5, 'Democratic Unionist': 5,
+    Green: 4, 'Plaid Cymru': 4, 'Social Democratic and Labour': 2, Speaker: 1,
+    Alliance: 1, 'Traditional Unionist Voice': 1, 'Ulster Unionist': 1,
+  };
+  for (const [party, expected] of Object.entries(EXPECTED_SEATS)) {
+    const actual = parties.find((p) => p.party === party)?.seats ?? 0;
+    if (actual !== expected) {
+      throw new Error(`${party}: ${actual} seats, expected ${expected}`);
+    }
+  }
+
+  // Per-seat vote arithmetic: the winner's votes must exceed the majority, and
+  // the majority must not exceed the votes cast.
+  let badArithmetic = 0;
+  for (const s of seatRecords) {
+    if (!Number.isFinite(s.majority) || !Number.isFinite(s.validVotes)) continue;
+    if (s.majority > s.validVotes || s.winnerVotes < s.majority) badArithmetic += 1;
+  }
+  if (badArithmetic) {
+    throw new Error(`${badArithmetic} seat(s) have inconsistent vote arithmetic`);
+  }
+
+  // Every seat should carry at least two candidates, so a "majority" is defined.
+  const thin = seatRecords.filter((s) => (s.candidates?.length ?? 0) < 2);
+  if (thin.length) {
+    console.warn(`  ! ${thin.length} seat(s) have fewer than 2 candidates`);
+  }
+
+  console.log('  checks        650 seats, published totals and seat counts all match\n');
 }
 
 main();

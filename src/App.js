@@ -1,222 +1,334 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+
+import SeatList from './components/SeatList';
+import SeatPanel from './components/SeatPanel';
+import Overview from './components/Overview';
+import { useDataset } from './hooks/useData';
+import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD } from './lib/analysis';
 import './App.css';
 
-const DATA_BASE = `${process.env.PUBLIC_URL || ''}/data`;
-
-// Bounds of Great Britain and Northern Ireland, padded.
 const HOME_BOUNDS = [[49.7, -9.2], [61.2, 2.2]];
 
-/** Load JSON once, reporting loading and error state. */
-function useJson(path) {
-  const [state, setState] = useState({ status: 'loading', data: null, error: null });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch(path)
-      .then((res) => {
-        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        return res.json();
-      })
-      .then((data) => { if (!cancelled) setState({ status: 'ready', data, error: null }); })
-      .catch((error) => { if (!cancelled) setState({ status: 'error', data: null, error }); });
-    return () => { cancelled = true; };
-  }, [path]);
-
-  return state;
-}
-
-/**
- * Fit the map to the whole of the UK on load. Without this Leaflet centres on
- * [0,0], which is in the Atlantic.
- */
+/** Fit the map to the UK once, rather than defaulting to [0,0] in the Atlantic. */
 function FitBounds() {
   const map = useMap();
   useEffect(() => { map.fitBounds(HOME_BOUNDS); }, [map]);
   return null;
 }
 
-function PartyKey({ parties, active, onToggle }) {
-  if (!parties) return null;
+/** Fly to a seat selected from the list or search. */
+function FlyToSeat({ seat }) {
+  const map = useMap();
+  useEffect(() => {
+    if (seat && Number.isFinite(seat.centre?.[0])) {
+      map.flyTo(seat.centre, Math.max(map.getZoom(), 10), { duration: 0.6 });
+    }
+  }, [map, seat]);
+  return null;
+}
+
+/**
+ * The map's shading fields live on the boundary feature properties. Lift the
+ * ones the active mode needs so colourFor() can treat every mode uniformly.
+ */
+function pickMetric(props, mode) {
+  switch (mode) {
+    case 'swing':
+      return {
+        resultType: props.resultType,
+        swingColour: props.swingColour,
+        swingFrom: props.swingFrom,
+      };
+    case 'share':
+      return { winnerShare: props.winnerShare };
+    case 'majority':
+      return { majority: props.majority };
+    case 'turnout':
+      return { turnout: props.turnout };
+    default:
+      return {};
+  }
+}
+
+/**
+ * Swing mode is categorical: each colour is a party that lost seats, so the
+ * legend lists them with counts rather than showing a value ramp.
+ */
+function SwingLegend({ summary }) {
+  const rows = (summary?.swings ?? []).slice(0, 8);
   return (
-    <ul className="parties">
-      {parties.map((p) => (
-        <li key={p.party}>
-          <button
-            type="button"
-            className={active === p.party ? 'swatch on' : 'swatch'}
-            onClick={() => onToggle(active === p.party ? null : p.party)}
-            aria-pressed={active === p.party}
-          >
-            <span className="dot" style={{ background: p.colour }} aria-hidden="true" />
-            {p.party}
-            <span className="count">{p.seats}</span>
-          </button>
+    <div className="swing-legend">
+      <p className="legend-note">Coloured by the party that lost the seat.</p>
+      <ul className="legend">
+        {rows.map((s) => {
+          const colour = summary.parties.find((p) => p.party === s.from)?.colour;
+          return (
+            <li key={`${s.to}-${s.from}`}>
+              <span className="swatch-chip" style={{ background: colour }} aria-hidden="true" />
+              {s.from} → {s.to} <strong>{s.count}</strong>
+            </li>
+          );
+        })}
+        <li>
+          <span className="swatch-chip" style={{ background: HELD }} aria-hidden="true" />
+          Held
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+function ModeLegend({ mode, summary }) {
+  if (mode === 'winner') {
+    return <p className="legend-note">Shaded by the party that won the seat.</p>;
+  }
+  if (mode === 'swing') {
+    return <SwingLegend summary={summary} />;
+  }
+  const bands = BANDS[mode] || [];
+  const sample = mode === 'majority'
+    ? [
+      { label: '15', seat: { majority: 15 } },
+      { label: '1,500', seat: { majority: 1500 } },
+      { label: '5,000', seat: { majority: 5000 } },
+      { label: '20,000', seat: { majority: 20000 } },
+    ]
+    : bands.map((b) => ({ label: b.label, seat: { [mode === 'share' ? 'winnerShare' : 'turnout']: (b.from + b.to) / 2 } }));
+
+  return (
+    <ul className="legend">
+      {sample.map((s) => (
+        <li key={s.label}>
+          <span className="swatch-chip" style={{ background: colourFor(s.seat, mode) }} aria-hidden="true" />
+          {s.label}
         </li>
       ))}
+      <li>
+        <span className="swatch-chip" style={{ background: NO_DATA }} aria-hidden="true" />
+        No data
+      </li>
     </ul>
   );
 }
 
-function SeatDetails({ seat, onClose }) {
-  if (!seat) return null;
-  return (
-    <aside className="details" aria-live="polite">
-      <button type="button" className="close" onClick={onClose} aria-label="Close">×</button>
-      <h2>{seat.name}</h2>
-      <p className="meta">
-        {seat.region}
-        {seat.electorate ? ` · electorate ${seat.electorate.toLocaleString()}` : ''}
-      </p>
-      <div className="mp">
-        {seat.photo && <img src={`${process.env.PUBLIC_URL || ''}/${seat.photo}`} alt="" />}
-        <div>
-          <strong>{seat.member || 'No member recorded'}</strong>
-          <span className="party" style={{ borderColor: seat.colour }}>
-            {seat.party}
-          </span>
-        </div>
-      </div>
-      {seat.memberWiki && (
-        <a href={seat.memberWiki} target="_blank" rel="noreferrer">
-          Wikipedia ↗
-        </a>
-      )}
-      {seat.notes && <p className="notes">{seat.notes}</p>}
-    </aside>
-  );
-}
-
 export default function App() {
-  const index = useJson(`${DATA_BASE}/constituencies.json`);
-  const summary = useJson(`${DATA_BASE}/parties.json`);
-  const boundaries = useJson(`${DATA_BASE}/boundaries.geojson`);
+  const { seats, summary, boundaries, status, error } = useDataset();
 
+  const [mode, setMode] = useState('winner');
   const [partyFilter, setPartyFilter] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [query, setQuery] = useState('');
+  const [tab, setTab] = useState('overview');
 
-  // react-leaflet's <GeoJSON> builds its L.GeoJSON internally and does not
-  // forward a ref to it, so keep our own map of seat id -> Leaflet layer. That
-  // lets selection and filtering restyle in place instead of re-parsing all
-  // 650 polygons on every click.
+  // react-leaflet's <GeoJSON> creates its L.GeoJSON internally and does not
+  // forward a ref to it, so keep our own id -> layer map. That lets mode and
+  // filter changes restyle 650 polygons in place rather than re-parsing them.
   const layersRef = useRef(new Map());
 
   const seatsById = useMemo(() => {
     const map = new Map();
-    if (index.status === 'ready') index.data.forEach((s) => map.set(s.id, s));
+    if (seats) seats.forEach((s) => map.set(s.id, s));
     return map;
-  }, [index]);
+  }, [seats]);
 
-  // Attach the seat colour onto each feature once, so the map and the seat
-  // index can never disagree about who won a constituency.
-  const styled = useMemo(() => {
-    if (boundaries.status !== 'ready') return null;
-    return {
-      ...boundaries.data,
-      features: boundaries.data.features.map((f) => ({
-        ...f,
-        properties: {
-          ...f.properties,
-          fillColor: seatsById.get(f.properties.id)?.colour || '#8a8f98',
-        },
-      })),
-    };
-  }, [boundaries, seatsById]);
+  // Per-seat display centre, so selecting a seat from the list can fly the map
+  // to it. Computed from the boundary geometry, which is already simplified.
+  const centres = useMemo(() => {
+    const map = new Map();
+    if (!boundaries) return map;
+    for (const f of boundaries.features) {
+      const polys = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
+      let sx = 0; let sy = 0; let n = 0;
+      for (const poly of polys) {
+        for (const ring of poly) {
+          for (const [lon, lat] of ring) { sx += lon; sy += lat; n += 1; }
+        }
+      }
+      if (n) map.set(f.properties.id, [sy / n, sx / n]);
+    }
+    return map;
+  }, [boundaries]);
 
   /**
-   * Selection and party filtering only change styling, so restyle the existing
-   * Leaflet layers in place. Re-creating the GeoJSON layer would re-parse all
-   * 650 polygons on every click.
+   * The map's metric lives on the boundary feature properties, while the seat
+   * index carries the detailed record. Merge them per seat so colourFor() has a
+   * single source of truth regardless of which mode is active.
    */
+  const mapSeats = useMemo(() => {
+    const map = new Map();
+    if (!seats || !boundaries) return map;
+    for (const f of boundaries.features) {
+      const seat = seatsById.get(f.properties.id);
+      if (seat) map.set(f.properties.id, { ...seat, ...pickMetric(f.properties, mode) });
+    }
+    return map;
+  }, [seats, boundaries, seatsById, mode]);
+
+  // Restyle in place whenever the metric or filter changes.
   useEffect(() => {
-    layersRef.current.forEach((lyr, id) => {
-      const seat = seatsById.get(id);
-      const isSelected = selected?.id === id;
+    layersRef.current.forEach((layer, id) => {
+      const seat = mapSeats.get(id);
       const dimmed = partyFilter && seat?.partyGroup !== partyFilter;
-      lyr.setStyle({
-        fillColor: seat?.colour || '#8a8f98',
-        fillOpacity: isSelected ? 0.95 : dimmed ? 0.12 : 0.68,
-        weight: isSelected ? 2.5 : 1,
-        color: isSelected ? '#ffffff' : '#c9cfdb',
+      const isSelected = selected?.id === id;
+      layer.setStyle({
+        fillColor: colourFor(seat, mode),
+        fillOpacity: isSelected ? 0.95 : dimmed ? 0.1 : 0.72,
+        weight: isSelected ? 2.5 : mode === 'winner' ? 1 : 0.5,
+        color: isSelected ? '#ffffff' : mode === 'winner' ? '#c9cfdb' : '#0f1115',
       });
-      if (isSelected) lyr.bringToFront();
+      if (isSelected) layer.bringToFront();
     });
-  }, [styled, selected, partyFilter, seatsById]);
+  }, [mode, partyFilter, selected, mapSeats]);
 
+  // Apply the initial style once features are first added.
   const onEachFeature = useCallback((feature, layer) => {
-    const p = feature.properties;
-    layersRef.current.set(p.id, layer);
-    layer.bindTooltip(p.name, { sticky: true, direction: 'top' });
-    layer.on({
-      click: () => setSelected(p),
-      mouseover: (e) => e.target.setStyle({ weight: 2 }),
-      mouseout: (e) => e.target.setStyle({ weight: 1 }),
+    const id = feature.properties.id;
+    layersRef.current.set(id, layer);
+    const seat = mapSeats.get(id) ?? seatsById.get(id);
+    layer.setStyle({
+      fillColor: colourFor(seat, mode),
+      fillOpacity: 0.72,
+      weight: 1,
+      color: '#c9cfdb',
     });
-  }, []);
+    layer.bindTooltip(feature.properties.name, { sticky: true, direction: 'top' });
+    layer.on({
+      click: () => {
+        const s = seatsById.get(id);
+        if (s) { setSelected({ ...s, centre: centres.get(s.id) }); setTab('seat'); }
+      },
+    });
+  }, [mapSeats, seatsById, centres, mode]);
 
-  const baseStyle = useCallback(
-    () => ({ weight: 1, color: '#c9cfdb', fillOpacity: 0.68 }),
-    [],
-  );
+  const listSeats = useMemo(() => {
+    if (!seats) return [];
+    return seats.map((s) => ({ ...s, centre: centres.get(s.id) }));
+  }, [seats, centres]);
 
-  if (index.status === 'error') {
+  if (status === 'error') {
     return (
       <div className="fallback">
         <h1>Data unavailable</h1>
         <p>
-          Could not load <code>{DATA_BASE}/constituencies.json</code>. Run{' '}
-          <code>npm run build:data</code> to generate it.
+          The generated data layer could not be loaded. Run <code>npm run build:data</code>
+          {' '}to create it, then <code>npm start</code>.
         </p>
-        <p className="error">{index.error?.message}</p>
+        {error && <p className="error">{error.message}</p>}
       </div>
     );
   }
 
+  if (status === 'loading') {
+    return <div className="fallback"><h1>Loading results…</h1></div>;
+  }
+
+  const counts = partyFilter
+    ? listSeats.filter((s) => s.partyGroup === partyFilter).length
+    : listSeats.length;
+
   return (
     <div className="App">
       <header>
-        <h1>Genny Tracks</h1>
-        <p>
-          Who represents each of the 650 UK constituencies elected in 2024
-          {summary.status === 'ready' && (
-            <span> · {summary.data.parties[0].party} won {summary.data.parties[0].seats}</span>
-          )}
-        </p>
+        <div className="title">
+          <h1>Genny Tracks</h1>
+          <p>
+            {summary?.totals
+              ? `UK general election 2024 · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
+              : 'UK general election 2024'}
+          </p>
+        </div>
+
+        <nav className="modes" aria-label="Map shading">
+          {MAP_MODES.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              className={mode === m.id ? 'mode on' : 'mode'}
+              onClick={() => setMode(m.id)}
+              aria-pressed={mode === m.id}
+              title={m.hint}
+            >
+              {m.label}
+            </button>
+          ))}
+        </nav>
       </header>
 
-      <div className="panel">
-        {summary.status === 'ready' && (
-          <PartyKey
-            parties={summary.data.parties}
-            active={partyFilter}
-            onToggle={setPartyFilter}
-          />
-        )}
-        <SeatDetails seat={selected} onClose={() => setSelected(null)} />
-      </div>
+      <aside className="panel">
+        <div className="tabs" role="tablist" aria-label="Side panel">
+          {[
+            ['overview', 'Overview'],
+            ['seat', selected ? selected.name : 'Seat'],
+            ['list', 'All seats'],
+          ].map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              className={tab === id ? 'tab on' : 'tab'}
+              onClick={() => setTab(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
-      <div className="map">
-        <MapContainer
-          bounds={HOME_BOUNDS}
-          scrollWheelZoom
-          style={{ height: '100%', width: '100%' }}
-        >
+        {partyFilter && (
+          <div className="filter-banner">
+            <span>Showing {counts} {partyFilter} seats</span>
+            <button type="button" className="link" onClick={() => setPartyFilter(null)}>
+              Clear
+            </button>
+          </div>
+        )}
+
+        <div className="panel-body">
+          {tab === 'overview' && (
+            <Overview
+              summary={summary}
+              activeParty={partyFilter}
+              onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
+            />
+          )}
+          {tab === 'seat' && (
+            <SeatPanel seat={selected} onClose={() => setSelected(null)} />
+          )}
+          {tab === 'list' && (
+            <SeatList
+              seats={listSeats}
+              query={query}
+              onQuery={setQuery}
+              selected={selected}
+              onSelect={(s) => { setSelected(s); if (s) setTab('seat'); }}
+            />
+          )}
+        </div>
+      </aside>
+
+      <main className="map">
+        <MapContainer bounds={HOME_BOUNDS} scrollWheelZoom className="leaflet-host">
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <FitBounds />
-          {styled && (
-            <GeoJSON
-              data={styled}
-              style={baseStyle}
-              onEachFeature={onEachFeature}
-            />
-          )}
+          <FlyToSeat seat={selected} />
+          {boundaries && <GeoJSON data={boundaries} onEachFeature={onEachFeature} />}
         </MapContainer>
-        {boundaries.status === 'loading' && <div className="loading">Loading boundaries…</div>}
-      </div>
+
+        <div className="map-overlay">
+          <ModeLegend mode={mode} summary={summary} />
+        </div>
+
+        {boundaryLoading(boundaries) && <div className="loading">Loading boundaries…</div>}
+      </main>
     </div>
   );
+}
+
+function boundaryLoading(boundaries) {
+  return !boundaries;
 }
