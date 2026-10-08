@@ -59,6 +59,9 @@ npm start            # http://localhost:3000
 | `npm test` | Jest via `react-scripts` |
 | `npm run deploy` | Publish `build/` to the `gh-pages` branch |
 
+See [docs/github-desktop.md](docs/github-desktop.md) for the GitHub Desktop
+workflow, including which paths are committed and which are generated.
+
 To preview a production build locally:
 
 ```bash
