@@ -1,4 +1,6 @@
+/* eslint-disable no-unused-vars */
 import React, { useMemo, useState } from 'react';
+import CensusPanel from './CensusPanel';
 import { num, pct, pp, pctAdaptive } from '../lib/analysis';
 
 /**
@@ -122,6 +124,8 @@ export default function SeatPanel({ seat, onClose }) {
           Read more on Wikipedia ↗
         </a>
       )}
+
+      <CensusPanel seat={seat} />
     </section>
   );
 }

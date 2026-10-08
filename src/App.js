@@ -5,8 +5,10 @@ import 'leaflet/dist/leaflet.css';
 import SeatList from './components/SeatList';
 import SeatPanel from './components/SeatPanel';
 import Overview from './components/Overview';
+import Correlate from './components/Correlate';
+import { CensusOverview } from './components/CensusPanel';
 import { useDataset } from './hooks/useData';
-import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD } from './lib/analysis';
+import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD, pct } from './lib/analysis';
 import './App.css';
 
 const HOME_BOUNDS = [[49.7, -9.2], [61.2, 2.2]];
@@ -47,6 +49,12 @@ function pickMetric(props, mode) {
       return { majority: props.majority };
     case 'turnout':
       return { turnout: props.turnout };
+    case 'census': {
+      // Values live on props.census (seat sub-record) rather than top-level.
+      const source = props.census || props;
+      const { deprived, minority, degree, noReligion } = source;
+      return { census: { deprived, minority, degree, noReligion } };
+    }
     default:
       return {};
   }
@@ -87,6 +95,35 @@ function ModeLegend({ mode, summary }) {
   if (mode === 'swing') {
     return <SwingLegend summary={summary} />;
   }
+  if (mode?.startsWith('census:')) {
+    const metric = summary?.census?.metrics?.find((m) => `census:${m.seatKey}` === mode);
+    if (!metric) return null;
+    return (
+      <div>
+        <p className="legend-note">{metric.hint}. England and Wales only.</p>
+        <ul className="legend">
+          {metric.domain.map((d, i) => {
+            const lo = metric.domain[0] + ((metric.domain[1] - metric.domain[0]) * i) / 4;
+            const hi = metric.domain[0] + ((metric.domain[1] - metric.domain[0]) * (i + 1)) / 4;
+            return (
+              <li key={i}>
+                <span
+                  className="swatch-chip"
+                  style={{ background: colourFor({ census: { [metric.seatKey]: (lo + hi) / 2 }, censusMetric: metric.seatKey, censusDomain: metric.domain }, 'census') }}
+                  aria-hidden="true"
+                />
+                {pct(lo, 0)}–{pct(hi, 0)}
+              </li>
+            );
+          })}
+          <li>
+            <span className="swatch-chip" style={{ background: NO_DATA }} aria-hidden="true" />
+            No census
+          </li>
+        </ul>
+      </div>
+    );
+  }
   const bands = BANDS[mode] || [];
   const sample = mode === 'majority'
     ? [
@@ -121,6 +158,27 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('overview');
+
+  /**
+   * Census metrics become map modes too, declared in the generated summary so
+   * the UI never hardcodes which ONS tables were loaded.
+   */
+  const censusModes = useMemo(() => [
+    ...MAP_MODES,
+    ...(summary?.census?.metrics ?? []).map((m) => ({
+      id: `census:${m.seatKey}`,
+      label: m.label,
+      hint: `${m.hint}. England and Wales only.`,
+      metric: m,
+    })),
+  ], [summary]);
+
+  // Resolve a "census:deprived" mode id down to the seatKey and domain it needs.
+  const activeCensus = useMemo(() => {
+    if (!mode?.startsWith('census:')) return null;
+    const seatKey = mode.slice('census:'.length);
+    return summary?.census?.metrics?.find((m) => m.seatKey === seatKey) ?? null;
+  }, [mode, summary]);
 
   // react-leaflet's <GeoJSON> creates its L.GeoJSON internally and does not
   // forward a ref to it, so keep our own id -> layer map. That lets mode and
@@ -159,12 +217,24 @@ export default function App() {
   const mapSeats = useMemo(() => {
     const map = new Map();
     if (!seats || !boundaries) return map;
+    const censusMode = activeCensus ? 'census' : null;
     for (const f of boundaries.features) {
       const seat = seatsById.get(f.properties.id);
-      if (seat) map.set(f.properties.id, { ...seat, ...pickMetric(f.properties, mode) });
+      if (!seat) continue;
+      // For census modes, the metric values live on the seat record, not the
+      // boundary feature properties. Pass the seat so pickMetric can read them.
+      const metricSource = censusMode ? seat : f.properties;
+      const merged = { ...seat, ...pickMetric(metricSource, censusMode || mode) };
+      if (censusMode && activeCensus) {
+        // Census values are denormalised onto the feature; carry the metric key
+        // and its display range so colourFor() can shade consistently.
+        merged.censusMetric = activeCensus.seatKey;
+        merged.censusDomain = activeCensus.domain;
+      }
+      map.set(f.properties.id, merged);
     }
     return map;
-  }, [seats, boundaries, seatsById, mode]);
+  }, [seats, boundaries, seatsById, mode, activeCensus]);
 
   // Restyle in place whenever the metric or filter changes.
   useEffect(() => {
@@ -241,7 +311,7 @@ export default function App() {
         </div>
 
         <nav className="modes" aria-label="Map shading">
-          {MAP_MODES.map((m) => (
+          {censusModes.map((m) => (
             <button
               key={m.id}
               type="button"
@@ -260,6 +330,8 @@ export default function App() {
         <div className="tabs" role="tablist" aria-label="Side panel">
           {[
             ['overview', 'Overview'],
+            ['census', 'Census'],
+            ['correlate', 'Correlate'],
             ['seat', selected ? selected.name : 'Seat'],
             ['list', 'All seats'],
           ].map(([id, label]) => (
@@ -291,6 +363,17 @@ export default function App() {
               summary={summary}
               activeParty={partyFilter}
               onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
+            />
+          )}
+          {tab === 'census' && (
+            <CensusOverview summary={summary} seats={listSeats} />
+          )}
+          {tab === 'correlate' && (
+            <Correlate
+              seats={listSeats}
+              summary={summary}
+              selected={selected}
+              onSelect={(s) => { if (s) { setSelected(s); setTab('seat'); } }}
             />
           )}
           {tab === 'seat' && (

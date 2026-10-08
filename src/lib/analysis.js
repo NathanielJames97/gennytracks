@@ -103,6 +103,12 @@ export const MAP_MODES = [
 ];
 
 /**
+ * Census modes are declared in the generated summary rather than hardcoded
+ * here, so adding an ONS table to the pipeline is enough to surface it.
+ */
+export const CENSUS_GROUP = 'census';
+
+/**
  * Resolve the fill colour for one seat under the active mode.
  * @param {object} seat  record from constituencies.json
  * @param {string} mode  one of MAP_MODES
@@ -135,8 +141,15 @@ export function colourFor(seat, mode) {
       if (!seat.swingColour) return NO_DATA;
       return seat.swingColour;
     }
-    case 'winner':
+    case CENSUS_GROUP:
     default:
+      // Census modes ('census:deprived' etc.) fall through to the census branch.
+      if (mode && mode.startsWith('census:')) {
+        const value = seat.census?.[seat.censusMetric];
+        if (!Number.isFinite(value)) return NO_DATA;
+        const d = seat.censusDomain || [0, 1];
+        return SEQUENTIAL((value - d[0]) / (d[1] - d[0] || 1));
+      }
       return seat.colour || NO_DATA;
   }
 }

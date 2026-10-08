@@ -34,6 +34,9 @@ import {
   loadConstituencyResults, loadCandidateResults, nationalTotals, partyName,
   PARTY_NAMES,
 } from './lib/hoc.mjs';
+import {
+  loadLookup, loadDemographics, DEMOGRAPHIC_METRICS,
+} from './lib/census.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -49,6 +52,12 @@ const SOURCE_GEOJSON = join(ROOT, 'data', 'source', 'constituency.geojson');
 const HOC_DIR = join(ROOT, 'data', 'source', 'hoc');
 const HOC_CONSTITUENCY = join(HOC_DIR, 'constituency.csv');
 const HOC_CANDIDATE = join(HOC_DIR, 'candidate.csv');
+
+// ONS Census 2021, aggregated from MSOA to constituency. England and Wales only:
+// the census does not cover Scotland or Northern Ireland, so 573 of the 650
+// seats carry demographics and 77 do not.
+const CENSUS_DIR = join(ROOT, 'data', 'source', 'census');
+const CENSUS_LOOKUP = join(CENSUS_DIR, 'msoa-to-pcon.csv');
 
 const OUT_DIR = join(ROOT, 'public', 'data');
 const OUT_PHOTOS = join(ROOT, 'public', 'photos');
@@ -229,6 +238,13 @@ function main() {
   console.log(`  hoc seats     ${hocSeats.length} rows, ${national.parties.length} parties`);
   console.log(`  hoc candidates ${hocCandidates.size} seats covered (${[...hocCandidates.values()].reduce((n, l) => n + l.length, 0)} candidates)`);
 
+  // ------------------------------------------------------- census 2021
+  // Census tables publish at MSOA level, so they are aggregated up through the
+  // ONS best-fit MSOA -> constituency lookup.
+  const censusLookup = loadLookup(CENSUS_LOOKUP);
+  const demographics = loadDemographics(CENSUS_DIR, censusLookup);
+  console.log(`  census        ${demographics.size} England & Wales seats (Scotland and NI have no census)`);
+
   const byKey = new Map(mps.map((m) => [m.key, m]));
   const unmatched = [];
   const missingHoc = [];
@@ -308,6 +324,23 @@ function main() {
       winnerShare,
       votes: votes ?? undefined,
       declarationTime: hoc?.declarationTime ?? null,
+      // --- Census 2021, England & Wales only ---
+      census: demographics.get(p.GSScode)
+        ? {
+          population: demographics.get(p.GSScode).population,
+          deprived: demographics.get(p.GSScode).TS011,
+          deprivationIndex: demographics.get(p.GSScode).deprivationIndex,
+          minority: demographics.get(p.GSScode).TS021,
+          whiteBritish: demographics.get(p.GSScode).whiteBritishShare,
+          degree: demographics.get(p.GSScode).TS067,
+          noQualifications: demographics.get(p.GSScode).noQualificationsShare,
+          noReligion: demographics.get(p.GSScode).TS030,
+          christian: demographics.get(p.GSScode).christianShare,
+          muslim: demographics.get(p.GSScode).muslimShare,
+          hindu: demographics.get(p.GSScode).hinduShare,
+          female: demographics.get(p.GSScode).TS008,
+        }
+        : null,
       candidates: (hocCandidates.get(p.Name) ?? []).map((c) => ({
         name: c.name,
         party: c.party,
@@ -348,6 +381,12 @@ function main() {
         winnerShare: record.winnerShare,
         majority: record.majority,
         turnout: record.turnout,
+        // Denormalised onto the feature so the map can shade by a census metric
+        // without a second lookup per feature.
+        deprived: record.census?.deprived ?? null,
+        minority: record.census?.minority ?? null,
+        degree: record.census?.degree ?? null,
+        noReligion: record.census?.noReligion ?? null,
         photo: null, // filled in during the photo pass
         notes: mp.notes,
       },
@@ -493,10 +532,38 @@ function main() {
     seats: seatRecords.filter((s) => Number.isFinite(s.majority) && s.majority >= b.min && s.majority < b.max).length,
   }));
 
+  // Census metrics, described once so the UI does not hardcode labels.
+  const censusMetrics = DEMOGRAPHIC_METRICS.map((m) => {
+    // The metric's `key` is its ONS table id; `seatKey` is the field it is
+    // stored under on each seat record.
+    const values = seatRecords
+      .map((s) => s.census?.[m.seatKey])
+      .filter(Number.isFinite)
+      .sort((a, b) => a - b);
+    const q = (p) => values[Math.floor(values.length * p)];
+    return {
+      ...m,
+      seats: values.length,
+      min: values[0],
+      p10: q(0.1),
+      median: q(0.5),
+      p90: q(0.9),
+      max: values[values.length - 1],
+      // Observed range across E&W, used to sanity-check the hand-set domain.
+      observed: [values[0], values[values.length - 1]],
+    };
+  });
+
   const summary = {
     total: seatRecords.length,
     generated: '2024 general election, 4 July',
     source: 'House of Commons Library, CBP-10009',
+    census: {
+      source: 'ONS Census 2021',
+      note: 'England and Wales only; 57 Scottish and 18 Northern Irish seats have no census.',
+      seats: seatRecords.filter((s) => s.census).length,
+      metrics: censusMetrics,
+    },
     totals: {
       electorate: seatRecords.reduce((n, s) => n + (s.electorate ?? 0), 0),
       validVotes: national.votes,
@@ -544,7 +611,12 @@ function main() {
   console.log(`  combined payload ${mb(boundaryBytes + indexBytes + summaryBytes)} (was ${mb(rawBytes)})`);
   console.log(`\n  turnout      ${(summary.totals.turnout * 100).toFixed(1)}% of ${summary.totals.electorate.toLocaleString()} electors`);
   console.log(`  seats        ${parties.filter((p) => p.seats > 0).length} parties, ${swings.length} distinct seat flows`);
-  console.log(`  marginals    ${summary.majorityBands.map((b) => `${b.label}:${b.seats}`).join('  ')}\n`);
+  console.log(`  marginals    ${summary.majorityBands.map((b) => `${b.label}:${b.seats}`).join('  ')}`);
+  console.log(`  census       ${summary.census.seats} seats, ${censusMetrics.length} metrics`);
+  for (const m of censusMetrics) {
+    console.log(`                ${m.label.padEnd(24)} p10 ${(m.p10 * 100).toFixed(1)}%  median ${(m.median * 100).toFixed(1)}%  p90 ${(m.p90 * 100).toFixed(1)}%  [domain ${m.domain.map((d) => `${d * 100}%`).join('-')}]`);
+  }
+  console.log('');
 
   // A reprojection mistake is silent and catastrophic (a map that renders in the
   // ocean), so assert the UK actually lands where the UK is.
@@ -607,6 +679,26 @@ function main() {
   }
   if (badArithmetic) {
     throw new Error(`${badArithmetic} seat(s) have inconsistent vote arithmetic`);
+  }
+
+  // Census: the E&W total should reproduce the published population. ONS's
+  // published figure is 59,597,542 usual residents; individual tables drift by
+  // a few dozen people because of statistical disclosure control, so allow a
+  // small tolerance rather than demanding an exact match.
+  const censusSeats = seatRecords.filter((s) => s.census);
+  const CENSUS_EXPECTED = 575;   // England (543) + Wales (32)
+
+  if (censusSeats.length !== CENSUS_EXPECTED) {
+    console.warn(`  ! census covers ${censusSeats.length} seats, expected ${CENSUS_EXPECTED}`);
+  }
+  const coveredCountries = new Set(censusSeats.map((s) => s.country));
+  for (const c of coveredCountries) {
+    if (c !== 'England' && c !== 'Wales') {
+      throw new Error(`Census data applied to a ${c} seat, which the census does not cover`);
+    }
+  }
+  if (censusMetrics.some((m) => !Number.isFinite(m.median))) {
+    throw new Error('A census metric has no median: check that table columns resolved');
   }
 
   // Every seat should carry at least two candidates, so a "majority" is defined.
