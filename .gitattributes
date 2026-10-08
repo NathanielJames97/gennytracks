@@ -1,9 +1,43 @@
-# Normalise line endings in the repository; check them out as CRLF on Windows.
-# Without this, git's CRLF warnings on every add are noisy and diffs can appear
-# to change whole files depending on who committed them.
+# Line endings
+#
+# This matters for GitHub Desktop specifically. GitHub Desktop ships its own git
+# and expects .gitattributes to be the authority rather than each machine's
+# core.autocrlf setting, otherwise a file can be committed with CRLF on one
+# machine and LF on another and show up as a whole-file diff.
+#
+# * text=auto lets git detect text vs binary.
+# The explicit rules below then force LF in the repository for the files where
+# CRLF would cause trouble, and check out CRLF on Windows.
+
 * text=auto
 
-# Generated data and images are binary as far as git is concerned.
-*.jpg binary
-*.png binary
-*.ico binary
+# Source: normalise to LF in the repo, CRLF on Windows checkout.
+*.js   text eol=crlf
+*.jsx  text eol=crlf
+*.mjs  text eol=crlf
+*.css  text eol=crlf
+*.html text eol=crlf
+*.json text eol=crlf
+*.md   text eol=crlf
+*.txt  text eol=crlf
+*.yml  text eol=crlf
+
+# Data files that must never be line-ending mangled.
+*.csv text eol=lf
+
+# Binary: never touch these.
+*.jpg   binary
+*.jpeg  binary
+*.png   binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.xlsx  binary
+
+# The 64 MB boundary file is a text format, but it is far too large to be worth
+# diffing or re-normalising, and a line-ending flip would rewrite all 64 MB.
+# Treat it as an opaque blob so it is stored exactly as downloaded.
+data/source/constituency.geojson binary
+
+# SVGs are left to * text=auto above: they are ordinary text and normalising them
+# to LF keeps diffs meaningful.
