@@ -1,0 +1,9 @@
+# Normalise line endings in the repository; check them out as CRLF on Windows.
+# Without this, git's CRLF warnings on every add are noisy and diffs can appear
+# to change whole files depending on who committed them.
+* text=auto
+
+# Generated data and images are binary as far as git is concerned.
+*.jpg binary
+*.png binary
+*.ico binary
