@@ -79,6 +79,15 @@ can be hosted at a site root or beneath a project subpath. The data generator
 writes to **public/data/** and **public/photos/**; Vite copies those files into
 **dist/** during production build.
 
+## Deployment
+
+The live site is hosted on [Cloudflare Pages](https://gennytracks.pages.dev/).
+The Pages project is connected to the GitHub **main** branch and builds with
+`npm run build`, publishing **dist/**. Each push to **main** triggers a
+production deployment; preview branches use Cloudflare preview deployments.
+Generated election files are rebuilt from the committed source inputs during
+each deployment. No application server or database is required.
+
 ## Scripts
 
 | Command | What it does |
@@ -94,7 +103,7 @@ writes to **public/data/** and **public/photos/**; Vite copies those files into
 | npm test | Run the Vitest and React Testing Library suite |
 | npm run test:watch | Run Vitest in watch mode |
 | npm run preview | Preview the production build locally |
-| npm run deploy | Publish dist/ to the gh-pages branch |
+| npm run deploy | Publish dist/ to the legacy GitHub Pages gh-pages branch |
 
 See [docs/data-provenance.md](docs/data-provenance.md) for boundary periods,
 coverage, licenses, source notes and known limits. See
