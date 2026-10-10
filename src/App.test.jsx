@@ -117,6 +117,7 @@ function mockFetch({ seats = [SEAT] } = {}) {
 
 beforeEach(() => {
   window.history.replaceState({}, '', '/');
+  window.localStorage.setItem('gennytracks-experience', 'advanced');
 });
 
 afterEach(() => {
@@ -133,6 +134,47 @@ test('loads and shows national totals', async () => {
   expect(screen.getByText('28,809,340')).toBeInTheDocument();
   expect(screen.getByText('votes cast')).toBeInTheDocument();
   expect(screen.getByText('4,515')).toBeInTheDocument();
+});
+
+test('starts with a focused simple app and supports the election-to-seat journey', async () => {
+  window.localStorage.removeItem('gennytracks-experience');
+  mockFetch();
+  render(<App />);
+
+  await screen.findByRole('heading', { name: '2024 general election' });
+  expect(screen.getByRole('button', { name: 'Simple' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByLabelText('Colour map by')).toBeInTheDocument();
+  fireEvent.click(screen.getByText('More tools'));
+  expect(screen.getByRole('tab', { name: 'Scenario' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('tab', { name: 'Scenario' }));
+  expect(screen.getByRole('heading', { name: 'Scenario builder' })).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Show scenario builder controls and results'));
+  expect(screen.getByRole('heading', { name: 'Multi-party support and seats' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Simple' })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('tab', { name: 'Map' }));
+
+  fireEvent.click(screen.getByRole('button', { name: 'Find a seat' }));
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search seats, MPs, parties or regions' }), { target: { value: 'Boston' } });
+  fireEvent.click(await screen.findByRole('row', { name: /Boston and Skegness/ }));
+
+  expect(screen.getByRole('heading', { name: 'Boston and Skegness' })).toBeInTheDocument();
+  expect(screen.getAllByText('Richard Tice').length).toBeGreaterThan(0);
+  const fullDetails = screen.getByText('Full result, sources and context').closest('details');
+  expect(fullDetails).not.toHaveAttribute('open');
+  fireEvent.click(screen.getByRole('button', { name: 'Advanced' }));
+  expect(screen.getByRole('tab', { name: 'Scenario' })).toBeInTheDocument();
+  expect(window.localStorage.getItem('gennytracks-experience')).toBe('advanced');
+});
+
+test('opens shared analysis views in Simple when Simple was remembered', async () => {
+  window.localStorage.setItem('gennytracks-experience', 'simple');
+  window.history.replaceState({}, '', '/?election=2024&view=scenario');
+  mockFetch();
+  render(<App />);
+
+  await screen.findByRole('heading', { name: 'Scenario builder' });
+  expect(screen.getByRole('button', { name: 'Simple' })).toHaveAttribute('aria-pressed', 'true');
+  expect(window.localStorage.getItem('gennytracks-experience')).toBe('simple');
 });
 
 test('switching the map mode changes the active control', async () => {

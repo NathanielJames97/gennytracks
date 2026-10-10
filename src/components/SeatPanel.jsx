@@ -7,7 +7,7 @@ import { num, pct, pp, pctAdaptive } from '../lib/analysis';
  * Detail panel for one seat: the winner, the full result table, and any
  * contextual note carried over from the Wikipedia source.
  */
-export default function SeatPanel({ seat, election, onClose, scenarioSeat = null }) {
+export default function SeatPanel({ seat, election, onClose, scenarioSeat = null, simple = false }) {
   const [showAll, setShowAll] = useState(false);
 
   const candidates = useMemo(() => seat?.candidates ?? [], [seat]);
@@ -37,68 +37,10 @@ export default function SeatPanel({ seat, election, onClose, scenarioSeat = null
     );
   }
 
-  return (
-    <section className="seat" aria-live="polite">
-      <button type="button" className="close" onClick={onClose} aria-label="Close seat details">
-        ×
-      </button>
-
-      <h2>{seat.name}</h2>
-      <p className="meta">
-        {seat.region}
-        {seat.type ? ` · ${seat.type} seat` : ''}
-        {seat.gss ? ` · ${seat.gss}` : ''}
-      </p>
-
-      <div className="winner">
-        {seat.photo ? (
-          <img src={`${import.meta.env.BASE_URL}${seat.photo}`} alt="" loading="lazy" />
-        ) : (
-          <div className="winner-blank" aria-hidden="true" />
-        )}
-        <div>
-          <strong>{seat.isNotional ? 'Notional party estimate' : seat.member || (election?.candidateDataGranularity === 'candidate' ? 'No member recorded' : 'Candidate names unavailable')}</strong>
-          <span className="tag" style={{ borderColor: seat.colour, color: seat.colour }}>
-            {seat.party}
-          </span>
-          <span className="result">{seat.result}</span>
-          {seat.memberGender && <span className="muted">{seat.memberGender}</span>}
-        </div>
-      </div>
-
-      <dl className="stats">
-        <div>
-          <dt>Majority</dt>
-          <dd>{num(seat.majority)}</dd>
-        </div>
-        <div>
-          <dt>As % of votes</dt>
-          <dd>{pctAdaptive(seat.majorityShare)}</dd>
-        </div>
-        <div>
-          <dt>Winner&rsquo;s share</dt>
-          <dd>{pct(seat.winnerShare, 1)}</dd>
-        </div>
-        <div>
-          <dt>Turnout</dt>
-          <dd>{pct(seat.turnout, 1)}</dd>
-        </div>
-        <div>
-          <dt>Electorate</dt>
-          <dd>{num(seat.electorate)}</dd>
-        </div>
-        <div>
-          <dt>Votes cast</dt>
-          <dd>{num(seat.validVotes)}</dd>
-        </div>
-      </dl>
-
-      {seat.declarationTime && (
-        <p className="meta">Declared at {seat.declarationTime}</p>
-      )}
-
+  const detailedContent = (
+    <>
       {scenarioSeat && scenarioCandidates.length > 0 && <section className="seat-scenario-result">
-        <p className="comparison-eyebrow">Applied 2024 scenario</p>
+        <p className="comparison-eyebrow">Applied 2024 scenario · an illustration, not a forecast</p>
         <h3>Projected result · {seat.name}</h3>
         <p><span>Declared winner:</span> <strong>{seat.partyGroup}</strong> → <span>Projected winner:</span> <strong>{scenarioSeat.projectedParty || scenarioSeat.partyGroup}</strong>{scenarioCandidates[0]?.name ? ' · ' + scenarioCandidates[0].name : ''}</p>
         <p className="note">Projected winning gap: {pctAdaptive(Math.max(0, (scenarioCandidates[0]?.share || 0) - (scenarioCandidates[1]?.share || 0)))}. {hasScenarioDifference ? 'The declared winner and candidate votes remain below for comparison.' : 'The projected winner matches the declared result.'}</p>
@@ -164,6 +106,92 @@ export default function SeatPanel({ seat, election, onClose, scenarioSeat = null
       )}
 
       <CensusPanel seat={seat} />
+    </>
+  );
+
+  return (
+    <section className="seat" aria-live="polite">
+      <button type="button" className="close" onClick={onClose} aria-label="Close seat details">
+        ×
+      </button>
+
+      <h2>{seat.name}</h2>
+      <p className="meta">
+        {seat.region}
+        {seat.type ? ` · ${seat.type} seat` : ''}
+        {seat.gss ? ` · ${seat.gss}` : ''}
+      </p>
+
+      <div className="winner">
+        {seat.photo ? (
+          <img src={`${import.meta.env.BASE_URL}${seat.photo}`} alt="" loading="lazy" />
+        ) : (
+          <div className="winner-blank" aria-hidden="true" />
+        )}
+        <div>
+          <strong>{seat.isNotional ? 'Notional party estimate' : seat.member || (election?.candidateDataGranularity === 'candidate' ? 'No member recorded' : 'Candidate names unavailable')}</strong>
+          <span className="tag" style={{ borderColor: seat.colour, color: seat.colour }}>
+            {seat.party}
+          </span>
+          <span className="result">{seat.result}</span>
+          {seat.memberGender && <span className="muted">{seat.memberGender}</span>}
+        </div>
+      </div>
+
+      {simple && scenarioSeat && scenarioCandidates.length > 0 && (
+        <p className="simple-scenario-note">
+          Illustrative scenario: projected winner {scenarioSeat.projectedParty || scenarioSeat.partyGroup}.
+        </p>
+      )}
+
+      <dl className={simple ? 'stats stats-simple' : 'stats'}>
+        <div>
+          <dt>Majority</dt>
+          <dd>{num(seat.majority)}</dd>
+        </div>
+        {simple ? <>
+          <div>
+            <dt>Winner&rsquo;s share</dt>
+            <dd>{pct(seat.winnerShare, 1)}</dd>
+          </div>
+          <div>
+            <dt>Turnout</dt>
+            <dd>{pct(seat.turnout, 1)}</dd>
+          </div>
+        </> : <>
+          <div>
+            <dt>As % of votes</dt>
+            <dd>{pctAdaptive(seat.majorityShare)}</dd>
+          </div>
+          <div>
+            <dt>Winner&rsquo;s share</dt>
+            <dd>{pct(seat.winnerShare, 1)}</dd>
+          </div>
+          <div>
+            <dt>Turnout</dt>
+            <dd>{pct(seat.turnout, 1)}</dd>
+          </div>
+          <div>
+            <dt>Electorate</dt>
+            <dd>{num(seat.electorate)}</dd>
+          </div>
+          <div>
+            <dt>Votes cast</dt>
+            <dd>{num(seat.validVotes)}</dd>
+          </div>
+        </>}
+      </dl>
+
+      {seat.declarationTime && (
+        <p className="meta">Declared at {seat.declarationTime}</p>
+      )}
+
+      {simple ? (
+        <details className="seat-full-details simple-details">
+          <summary>Full result, sources and context</summary>
+          <div>{detailedContent}</div>
+        </details>
+      ) : detailedContent}
     </section>
   );
 }

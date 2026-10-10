@@ -54,6 +54,17 @@ Constituency history exposes official population, residential and land-area
 overlap links between the 2010 and 2024 boundary sets. Links back to 2001 are
 not available yet. The existing links describe territory, not vote movement.
 
+## Simple and Advanced modes
+
+New visitors start in **Simple**, a compact map-first experience for choosing
+an election, finding a constituency, checking its headline result and history,
+and comparing election totals. Every analysis tool is also available from the
+**More tools** drawer. The map's **Colour by** selector includes all available
+map measures. Dense tables, methods, filters and source notes open from labelled
+details controls, and the **More** menu keeps link-copy and export actions close
+at hand. **Advanced** shows the full workspace directly. The app remembers the
+chosen mode in this browser, and shared links retain their view in either mode.
+
 ## Quick start
 
 ~~~bash

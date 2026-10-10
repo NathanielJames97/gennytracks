@@ -203,6 +203,27 @@ information architecture before further visual polish.
 
 ## Planned UI rework: reduce information density
 
+### Delivered first slice (11 October 2026)
+
+The app now starts new visitors in Simple and remembers an explicit mode choice
+in local storage. The responsive, map-first shell has a compact selector for all
+available map measures, bottom navigation on phones and a More tools drawer for
+Census, Correlate, Scenario, Polling and Backtest. The overview, seat result,
+history and full comparison keep all controls and supporting content available
+behind labelled disclosures. Simple analysis views retain the same components
+and actions as Advanced, with dense workspaces collapsed until opened. Shared
+views stay in the user's chosen mode. Source and boundary details remain
+available, and qualifications for notional and party-aggregate data stay
+visible.
+
+The entry-to-seat flow and the full tool drawer have been checked in a visible
+390×844 browser. Tests confirm analysis links open in Simple and keep the
+scenario workspace reachable there. The broader 1440×900 and 1024×768 review,
+zoomed-text and keyboard/screen-reader acceptance, expanded comparison review,
+and a complete polling-to-scenario journey in both modes remain open. Continue
+from the acceptance criteria below; do not treat this slice as the completed
+visual rework.
+
 The current screen exposes most tools, methods and explanatory copy at once.
 The result is difficult to scan, especially on a phone, and delays access to
 the map and the election facts people came to inspect. Use progressive
@@ -223,12 +244,12 @@ keeping every existing analysis tool available in an explicit Advanced view.
   **Details** disclosures. Keep material qualifications visible in brief
   context, including notional results, grouped 2001 results and incompatible
   boundaries.
-- Advanced exposes the complete analysis workspace: all map modes and tabs,
-  filters, full party-vector scenario inputs, polling tables and sources,
-  detailed methods, census and correlation tools, backtests, and exports.
-- Keep deep links useful. If a URL opens a control or analysis that Simple
-  hides, switch to Advanced and focus or reveal the relevant section. The view
-  preference must not change election data, calculations or share-link meaning.
+- Simple exposes every analysis view through a compact **More tools** drawer.
+  Keep dense controls, methods, tables and sources behind labelled disclosures,
+  while preserving their existing interactions and results.
+- Advanced exposes the complete analysis workspace directly. Shared links open
+  their requested view in the selected mode; changing display mode alone must
+  not change election data, calculations or share-link meaning.
 - On narrow screens, give the map and core facts the first-screen priority.
   Replace multi-row control wraps with compact selectors and a clear way to
   switch between map and analysis. On wider screens, use a compact header and
@@ -247,9 +268,9 @@ keeping every existing analysis tool available in an explicit Advanced view.
 3. Complete the Simple election-to-seat journey from the normal entry screen:
    choose an election, scan the map, search/select a seat, and inspect its
    result and history.
-4. Organize the remaining analysis screens into Advanced and apply the same
-   compact summary plus expandable methods pattern, starting with Scenario,
-   Polling and Compare where controls and explanatory text are most dense.
+4. Make every analysis screen available in Simple through a compact tool
+   drawer. Add a short orientation and expandable workspace pattern, starting
+   with Scenario, Polling, Census, Correlate and Backtest.
 5. Review representative desktop, tablet and phone widths and complete the
    acceptance journeys before calling the rework finished.
 
@@ -260,11 +281,10 @@ keeping every existing analysis tool available in an explicit Advanced view.
   of controls. No horizontal overflow is introduced.
 - In Simple, a visitor can choose an election, find and select a seat, and read
   its declared result and history without needing to understand advanced tools.
-- In Advanced, the existing polling-to-scenario-map journey, comparison tools,
-  exports and detailed data views remain reachable and preserve their current
-  calculations and URL state.
-- A shared deep link to an advanced-only control reveals it correctly. Changing
-  the display mode alone does not alter the shared analysis state.
+- Every feature available in Advanced is also reachable in Simple; dense
+  controls can be opened and closed without changing results or URL state.
+- Polling-to-scenario, comparison, exports and detailed data views work in both
+  modes. A shared deep link opens the requested view in the saved mode.
 - Essential provenance and caveats remain clear in both views; notional
   results, grouped 2001 data and boundary-compatibility limits stay explicit.
 - The toggle and detail disclosures work with keyboard navigation and screen

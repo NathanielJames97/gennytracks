@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import SeatList from './components/SeatList';
 import SeatPanel from './components/SeatPanel';
 import Overview from './components/Overview';
+import SimpleOverview from './components/SimpleOverview';
 import Correlate from './components/Correlate';
 import { CensusOverview } from './components/CensusPanel';
 import { resultRows, useDataFile, useDataFiles, useDataset } from './hooks/useData';
@@ -12,6 +13,7 @@ import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD, pct } from './lib/analysis'
 import { readShareState, writeShareState, downloadCsv } from './lib/share';
 import HistoryPanel from './components/HistoryPanel';
 import ComparePanel from './components/ComparePanel';
+import SimpleComparePanel from './components/SimpleComparePanel';
 import ComparisonMaps from './components/ComparisonMaps';
 import { UK_IRELAND_BOUNDS } from './lib/map-bounds';
 import ScenarioLab from './components/ScenarioLab';
@@ -22,6 +24,16 @@ import { canonicalPartyName } from './lib/parties.mjs';
 import { buildComparison, filterComparisonPairs, DEFAULT_COMPARISON_FILTERS, COMPARISON_SORTS, comparisonAreas, downloadComparisonCsv } from './lib/comparison';
 import { filterComparisonChoices, resolveComparisonChoice } from './lib/comparison-compatibility';
 import './App.css';
+
+const SIMPLE_MODE_KEY = 'gennytracks-experience';
+
+function initialSimpleMode() {
+  try {
+    return window.localStorage.getItem(SIMPLE_MODE_KEY) !== 'advanced';
+  } catch {
+    return true;
+  }
+}
 
 
 
@@ -178,8 +190,23 @@ function ModeLegend({ mode, summary, election, projected = false }) {
   );
 }
 
+function SimpleFeaturePanel({ title, description, children }) {
+  return (
+    <section className="simple-feature-panel">
+      <p className="eyebrow">Analysis tool</p>
+      <h2>{title}</h2>
+      <p>{description}</p>
+      <details className="simple-feature-disclosure">
+        <summary>Show {title.toLowerCase()} controls and results</summary>
+        <div>{children}</div>
+      </details>
+    </section>
+  );
+}
+
 export default function App() {
   const [routeState] = useState(readShareState);
+  const [simpleMode, setSimpleMode] = useState(initialSimpleMode);
   const [requestedElectionId, setRequestedElectionId] = useState(routeState.election || '2024');
   const { manifest, election, electionId, seats, summary, boundaries, status, error } = useDataset(requestedElectionId);
   const [mode, setMode] = useState(routeState.mode || 'winner');
@@ -190,6 +217,7 @@ export default function App() {
   const [tab, setTab] = useState([
     'overview', 'census', 'correlate', 'seat', 'history', 'compare', 'scenario', 'polling', 'backtest', 'list',
   ].includes(routeState.view) ? routeState.view : 'overview');
+  const [comparisonDetailsOpen, setComparisonDetailsOpen] = useState(false);
   const [compareId, setCompareId] = useState(routeState.compare || '2019-notional-2024');
   const [compatibleComparisonsOnly, setCompatibleComparisonsOnly] = useState(routeState.compareCompatible === '1');
   const [comparisonFilters, setComparisonFilters] = useState({
@@ -552,8 +580,91 @@ export default function App() {
     }
   };
 
+  const handleShareLink = async () => {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: 'Genny Tracks',
+          text: `Explore the ${election?.label || election?.year} UK general election by place.`,
+          url: window.location.href,
+        });
+        return;
+      } catch (shareError) {
+        if (shareError?.name === 'AbortError') return;
+      }
+    }
+    await handleCopyLink();
+  };
+
+  const censusPanel = <CensusOverview summary={summary} seats={listSeats} />;
+  const correlatePanel = <Correlate
+    seats={listSeats}
+    summary={summary}
+    selected={selected}
+    onSelect={(s) => { if (s) { setSelected(s); setTab('seat'); } }}
+  />;
+  const historyPanel = <HistoryPanel
+    seat={selected}
+    election={election}
+    elections={historyElections}
+    boundarySets={manifest?.boundarySets || []}
+    resultSets={historyResultSets}
+    crosswalks={historyCrosswalks}
+    onSelectElection={(id) => { setRequestedElectionId(id); setTab('seat'); }}
+    onSelectPlace={(id, boundarySetId) => {
+      const linkedElection = historyElections
+        .filter((item) => item.boundarySetId === boundarySetId)
+        .sort((a, b) => b.year - a.year || Number(a.isNotional) - Number(b.isNotional))[0];
+      if (!linkedElection) return;
+      setSelectedId(id);
+      setRequestedElectionId(linkedElection.id);
+      setTab('history');
+    }}
+  />;
+  const scenarioPanel = <ScenarioLab
+    election={scenarioDescriptor}
+    seats={scenarioBaseSeats || []}
+    baseline={scenarioBaseline}
+    regionBaselines={scenarioBaselineSet.regional}
+    baselineByGeography={scenarioBaselineSet.byGeography}
+    scenario={scenario}
+    scenarioSeats={scenarioSeats}
+    onChange={setScenario}
+    onApply={(enabled) => { setProjection(enabled); if (enabled) setMode('winner'); }}
+    applied={projectionAvailable}
+    canApplyMap={electionId === '2024'}
+    scenarioError={scenarioError}
+    onSelectSeat={(seat) => { setSelectedId(seat?.id || null); setProjection(true); setMode('winner'); setTab('seat'); }}
+  />;
+  const pollingPanel = <PollingPanel
+    data={pollsFile.data}
+    scenarioBaseline={scenarioBaselineSet.byGeography.GB}
+    onUseScenario={(nextScenario) => { setScenario(nextScenario); setProjection(false); setTab('scenario'); }}
+  />;
+  const backtestPanel = <BacktestPanel elections={historyElections} files={backtestFiles.data} polls={pollsFile.data} />;
+
+  const changeExperience = (useSimple) => {
+    setSimpleMode(useSimple);
+    try {
+      window.localStorage.setItem(SIMPLE_MODE_KEY, useSimple ? 'simple' : 'advanced');
+    } catch {
+      // The mode remains available for this session when storage is disabled.
+    }
+  };
+
+  const simpleTabs = [
+    ['overview', 'Map'],
+    ['list', 'Seats'],
+    ...(selected ? [['seat', 'Seat'], ['history', 'History']] : []),
+    ['compare', 'Compare'],
+  ];
+
   return (
-    <div className={tab === 'compare' ? 'App comparison-app' : ['scenario', 'polling', 'backtest'].includes(tab) ? 'App scenario-app' : 'App'}>
+    <div className={[
+      'App',
+      tab === 'compare' ? 'comparison-app' : ['scenario', 'polling', 'backtest'].includes(tab) ? 'scenario-app' : '',
+      simpleMode ? 'simple-app' : '',
+    ].filter(Boolean).join(' ')}>
       <header>
         <div className="brand">
           <svg className="brand-mark" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
@@ -569,7 +680,9 @@ export default function App() {
           <div className="title">
             <h1>Genny Tracks</h1>
             <p>
-              {summary?.totals
+              {simpleMode
+                ? `${election?.label || election?.year || ''} · ${counts} seats`
+                : summary?.totals
                 ? `UK general election ${election?.label || election?.year} · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
                 : `UK general election ${election?.label || election?.year || ''}`}
             </p>
@@ -591,13 +704,32 @@ export default function App() {
               ))}
             </select>
           </label>
-          <button type="button" className="header-action" onClick={handleCopyLink}>Copy link</button>
-          <button type="button" className="header-action" disabled={(tab === 'compare' && (!comparisonSeats || !comparisonDescriptor || Boolean(comparisonError))) || (tab === 'scenario' && (!scenarioComplete || Boolean(scenarioError)))} onClick={() => tab === 'compare'
-            ? downloadComparisonCsv(comparisonModel, comparisonPairs, election, comparisonDescriptor, comparisonFilters)
-            : downloadCsv((projectionAvailable || tab === 'scenario') ? scenarioSeats : listSeats, tab === 'scenario' ? scenarioDescriptor : election, projectionAvailable || tab === 'scenario', (projectionAvailable || tab === 'scenario') ? scenario : null)}>{tab === 'compare' ? 'Export comparison' : 'Export CSV'}</button>
+          {simpleMode ? (
+            <>
+              <button type="button" className="header-action share-action" onClick={handleShareLink}>Share</button>
+              <details className="simple-actions-menu">
+                <summary aria-label="More actions">More</summary>
+                <div>
+                  <button type="button" onClick={handleCopyLink}>Copy link</button>
+                  <button type="button" disabled={(tab === 'compare' && (!comparisonSeats || !comparisonDescriptor || Boolean(comparisonError))) || (tab === 'scenario' && (!scenarioComplete || Boolean(scenarioError)))} onClick={() => tab === 'compare'
+                    ? downloadComparisonCsv(comparisonModel, comparisonPairs, election, comparisonDescriptor, comparisonFilters)
+                    : downloadCsv((projectionAvailable || tab === 'scenario') ? scenarioSeats : listSeats, tab === 'scenario' ? scenarioDescriptor : election, projectionAvailable || tab === 'scenario', (projectionAvailable || tab === 'scenario') ? scenario : null)}>{tab === 'compare' ? 'Export comparison' : 'Export CSV'}</button>
+                </div>
+              </details>
+            </>
+          ) : <>
+            <button type="button" className="header-action" onClick={handleCopyLink}>Copy link</button>
+            <button type="button" className="header-action" disabled={(tab === 'compare' && (!comparisonSeats || !comparisonDescriptor || Boolean(comparisonError))) || (tab === 'scenario' && (!scenarioComplete || Boolean(scenarioError)))} onClick={() => tab === 'compare'
+              ? downloadComparisonCsv(comparisonModel, comparisonPairs, election, comparisonDescriptor, comparisonFilters)
+              : downloadCsv((projectionAvailable || tab === 'scenario') ? scenarioSeats : listSeats, tab === 'scenario' ? scenarioDescriptor : election, projectionAvailable || tab === 'scenario', (projectionAvailable || tab === 'scenario') ? scenario : null)}>{tab === 'compare' ? 'Export comparison' : 'Export CSV'}</button>
+          </>}
+          <div className="experience-toggle" role="group" aria-label="Experience mode">
+            <button type="button" className={simpleMode ? 'on' : ''} aria-pressed={simpleMode} onClick={() => changeExperience(true)}>Simple</button>
+            <button type="button" className={!simpleMode ? 'on' : ''} aria-pressed={!simpleMode} onClick={() => changeExperience(false)}>Advanced</button>
+          </div>
         </div>
 
-        {tab !== 'compare' && <nav className="modes" aria-label="Map shading">
+        {!simpleMode && tab !== 'compare' && <nav className="modes" aria-label="Map shading">
           {censusModes.map((m) => (
             <button
               key={m.id}
@@ -615,8 +747,9 @@ export default function App() {
       </header>
 
       <aside className="panel">
-        <div className="tabs" role="tablist" aria-label="Side panel">
-          {[
+        <div className={simpleMode ? 'panel-navigation' : ''}>
+        <div className={simpleMode ? 'tabs simple-tabs' : 'tabs'} role="tablist" aria-label={simpleMode ? 'Simple navigation' : 'Side panel'}>
+          {(simpleMode ? simpleTabs : [
             ['overview', 'Overview'],
             ...(summary?.census?.metrics?.length ? [['census', 'Census'], ['correlate', 'Correlate']] : []),
             ['seat', selected ? selected.name : 'Seat'],
@@ -626,7 +759,7 @@ export default function App() {
             ['polling', 'Polling'],
             ['backtest', 'Backtest'],
             ['list', 'All seats'],
-          ].map(([id, label]) => (
+          ]).map(([id, label]) => (
             <button
               key={id}
               type="button"
@@ -639,6 +772,18 @@ export default function App() {
             </button>
           ))}
         </div>
+        {simpleMode && <details className="simple-tools-menu">
+          <summary>More tools{['census', 'correlate', 'scenario', 'polling', 'backtest'].includes(tab) ? ` · ${tab === 'census' ? 'Census' : tab === 'correlate' ? 'Correlate' : tab === 'backtest' ? 'Backtest' : tab[0].toUpperCase() + tab.slice(1)}` : ''}</summary>
+          <div className="simple-tool-links" role="tablist" aria-label="More tools">
+            {[
+              ...(summary?.census?.metrics?.length ? [['census', 'Census'], ['correlate', 'Correlate']] : []),
+              ['scenario', 'Scenario'], ['polling', 'Polling'], ['backtest', 'Backtest'],
+            ].map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>{label}</button>
+            ))}
+          </div>
+        </details>}
+        </div>
 
         {(partyFilter || regionFilter) && tab !== 'compare' && (
           <div className="filter-banner">
@@ -650,29 +795,49 @@ export default function App() {
 
         <div className="panel-body">
           {tab === 'overview' && (
-            <Overview
-              summary={summary}
-              election={election}
-              activeParty={partyFilter}
-              onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
-              activeRegion={regionFilter}
-              onSelectRegion={(region) => setRegionFilter(region)}
-              onClearRegion={() => setRegionFilter(null)}
-            />
+            simpleMode ? (
+              <>
+                <SimpleOverview
+                  summary={summary}
+                  election={election}
+                  activeParty={partyFilter}
+                  onSelectParty={(party) => setPartyFilter((current) => (current === party ? null : party))}
+                  onOpenSeats={() => setTab('list')}
+                  onOpenCompare={() => setTab('compare')}
+                />
+                <details className="simple-feature-disclosure">
+                  <summary>Regional results and filters</summary>
+                  <Overview
+                    summary={summary}
+                    election={election}
+                    activeParty={partyFilter}
+                    onSelectParty={(party) => setPartyFilter((current) => (current === party ? null : party))}
+                    activeRegion={regionFilter}
+                    onSelectRegion={setRegionFilter}
+                    onClearRegion={() => setRegionFilter(null)}
+                  />
+                </details>
+              </>
+            ) : (
+              <Overview
+                summary={summary}
+                election={election}
+                activeParty={partyFilter}
+                onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
+                activeRegion={regionFilter}
+                onSelectRegion={(region) => setRegionFilter(region)}
+                onClearRegion={() => setRegionFilter(null)}
+              />
+            )
           )}
           {tab === 'census' && (
-            <CensusOverview summary={summary} seats={listSeats} />
+            simpleMode ? <SimpleFeaturePanel title="Census context" description="Explore constituency census measures, coverage and source notes.">{censusPanel}</SimpleFeaturePanel> : censusPanel
           )}
           {tab === 'correlate' && (
-            <Correlate
-              seats={listSeats}
-              summary={summary}
-              selected={selected}
-              onSelect={(s) => { if (s) { setSelected(s); setTab('seat'); } }}
-            />
+            simpleMode ? <SimpleFeaturePanel title="Compare measures" description="Explore how election outcomes relate to census measures across constituencies.">{correlatePanel}</SimpleFeaturePanel> : correlatePanel
           )}
           {tab === 'seat' && (
-            <SeatPanel seat={selected} election={election} onClose={() => setSelected(null)} scenarioSeat={projectionAvailable && electionId === '2024' ? scenarioSeatsById.get(selected?.id) : null} />
+            <SeatPanel seat={selected} election={election} simple={simpleMode} onClose={() => { setSelected(null); setTab('overview'); }} scenarioSeat={projectionAvailable && electionId === '2024' ? scenarioSeatsById.get(selected?.id) : null} />
           )}
           {tab === 'list' && (
             <SeatList
@@ -684,24 +849,7 @@ export default function App() {
             />
           )}
           {tab === 'history' && (
-            <HistoryPanel
-              seat={selected}
-              election={election}
-              elections={historyElections}
-              boundarySets={manifest?.boundarySets || []}
-              resultSets={historyResultSets}
-              crosswalks={historyCrosswalks}
-              onSelectElection={(id) => { setRequestedElectionId(id); setTab('seat'); }}
-              onSelectPlace={(id, boundarySetId) => {
-                const linkedElection = historyElections
-                  .filter((item) => item.boundarySetId === boundarySetId)
-                  .sort((a, b) => b.year - a.year || Number(a.isNotional) - Number(b.isNotional))[0];
-                if (!linkedElection) return;
-                setSelectedId(id);
-                setRequestedElectionId(linkedElection.id);
-                setTab('history');
-              }}
-            />
+            simpleMode ? <SimpleFeaturePanel title="Seat history" description="Follow this constituency across elections and inspect the boundary links used to connect places.">{historyPanel}</SimpleFeaturePanel> : historyPanel
           )}
           {tab === 'compare' && (
             <>
@@ -714,59 +862,79 @@ export default function App() {
                   ))}
                 </select>
               </label>
-              <label className="comparison-check compatible-comparisons-toggle">
-                <input type="checkbox" checked={compatibleComparisonsOnly} onChange={(event) => setCompatibleComparisonsOnly(event.target.checked)} />
-                Same boundary set only
-              </label>
-              <ComparePanel
-                election={election}
-                seats={seats}
-                comparison={comparisonDescriptor}
-                comparisonSeats={comparisonSeats}
-                model={comparisonModel} pairs={comparisonPairs}
-                filters={comparisonFilters} onFilters={setComparisonFilters}
-                boundaries={boundaries} comparisonBoundaries={comparisonBoundaries}
-                boundarySets={manifest?.boundarySets || []} sources={manifest?.sources || []}
-                error={comparisonError}
-                onSelectSeat={(seat, selectedElectionId = electionId) => {
-                  setRequestedElectionId(selectedElectionId);
-                  setSelectedId(seat?.id || null);
-                  setTab('seat');
-                }}
-              />
+              {simpleMode ? (
+                <>
+                <SimpleComparePanel
+                  election={election}
+                  comparison={comparisonDescriptor}
+                  comparisonSeats={comparisonSeats}
+                  model={comparisonModel}
+                  error={comparisonError}
+                  onOpenDetails={() => setComparisonDetailsOpen(true)}
+                />
+                <details className="simple-feature-disclosure" open={comparisonDetailsOpen} onToggle={(event) => setComparisonDetailsOpen(event.currentTarget.open)}>
+                  <summary>Detailed comparison controls</summary>
+                  <label className="comparison-check compatible-comparisons-toggle">
+                    <input type="checkbox" checked={compatibleComparisonsOnly} onChange={(event) => setCompatibleComparisonsOnly(event.target.checked)} />
+                    Same boundary set only
+                  </label>
+                  <ComparePanel
+                    election={election}
+                    seats={seats}
+                    comparison={comparisonDescriptor}
+                    comparisonSeats={comparisonSeats}
+                    model={comparisonModel} pairs={comparisonPairs}
+                    filters={comparisonFilters} onFilters={setComparisonFilters}
+                    boundaries={boundaries} comparisonBoundaries={comparisonBoundaries}
+                    boundarySets={manifest?.boundarySets || []} sources={manifest?.sources || []}
+                    error={comparisonError}
+                    onSelectSeat={(seat, selectedElectionId = electionId) => {
+                      setRequestedElectionId(selectedElectionId);
+                      setSelectedId(seat?.id || null);
+                      setTab('seat');
+                    }}
+                  />
+                </details>
+                </>
+              ) : <>
+                <label className="comparison-check compatible-comparisons-toggle">
+                  <input type="checkbox" checked={compatibleComparisonsOnly} onChange={(event) => setCompatibleComparisonsOnly(event.target.checked)} />
+                  Same boundary set only
+                </label>
+                <ComparePanel
+                  election={election}
+                  seats={seats}
+                  comparison={comparisonDescriptor}
+                  comparisonSeats={comparisonSeats}
+                  model={comparisonModel} pairs={comparisonPairs}
+                  filters={comparisonFilters} onFilters={setComparisonFilters}
+                  boundaries={boundaries} comparisonBoundaries={comparisonBoundaries}
+                  boundarySets={manifest?.boundarySets || []} sources={manifest?.sources || []}
+                  error={comparisonError}
+                  onSelectSeat={(seat, selectedElectionId = electionId) => {
+                    setRequestedElectionId(selectedElectionId);
+                    setSelectedId(seat?.id || null);
+                    setTab('seat');
+                  }}
+                />
+              </>}
             </>
           )}
           {tab === 'scenario' && (
-            <ScenarioLab
-              election={scenarioDescriptor}
-              seats={scenarioBaseSeats || []}
-              baseline={scenarioBaseline}
-              regionBaselines={scenarioBaselineSet.regional}
-              baselineByGeography={scenarioBaselineSet.byGeography}
-              scenario={scenario}
-              scenarioSeats={scenarioSeats}
-              onChange={setScenario}
-              onApply={(enabled) => { setProjection(enabled); if (enabled) setMode('winner'); }}
-              applied={projectionAvailable}
-              canApplyMap={electionId === '2024'}
-              scenarioError={scenarioError}
-              onSelectSeat={(seat) => { setSelectedId(seat?.id || null); setProjection(true); setMode('winner'); setTab('seat'); }}
-            />
+            simpleMode ? <SimpleFeaturePanel title="Scenario builder" description="Test party support changes, optional regional overrides and projected seat outcomes. Scenarios are illustrations, not forecasts.">{scenarioPanel}</SimpleFeaturePanel> : scenarioPanel
           )}
-          {tab === 'polling' && <PollingPanel
-            data={pollsFile.data}
-            scenarioBaseline={scenarioBaselineSet.byGeography.GB}
-            onUseScenario={(nextScenario) => { setScenario(nextScenario); setProjection(false); setTab('scenario'); }}
-          />}
-          {tab === 'backtest' && <BacktestPanel
-            elections={historyElections}
-            files={backtestFiles.data}
-            polls={pollsFile.data}
-          />}
+          {tab === 'polling' && (simpleMode ? <SimpleFeaturePanel title="Polling" description="Review sourced polling snapshots and send a selected observation into the scenario builder.">{pollingPanel}</SimpleFeaturePanel> : pollingPanel)}
+          {tab === 'backtest' && (simpleMode ? <SimpleFeaturePanel title="Election backtests" description="Compare historical seat outcomes with the available polling and allocation methods.">{backtestPanel}</SimpleFeaturePanel> : backtestPanel)}
         </div>
       </aside>
 
       <main className={tab === 'compare' ? 'map comparison-mode' : 'map'}>
+        {simpleMode && tab !== 'compare' && <label className="simple-map-tools">
+          <span>Colour by</span>
+          <select aria-label="Colour map by" value={mode} onChange={(event) => { setMode(event.target.value); if (event.target.value !== 'winner') setProjection(false); }}>
+            {censusModes.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
+          </select>
+        </label>}
         {tab === 'compare' ? (
           <ComparisonMaps
             election={election}
