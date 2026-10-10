@@ -1,16 +1,17 @@
 {
   "short_name": "Genny Tracks",
   "name": "Genny Tracks — UK constituencies and their MPs",
-  "icons": [
-    {
-      "src": "favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    }
-  ],
+  "description": "Explore UK general elections from 2001 to 2024 by place: constituency maps, boundary-aware comparisons, seat scenarios and sourced polling snapshots.",
+  "lang": "en-GB",
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "theme_color": "#0f1115",
-  "background_color": "#0f1115"
+  "background_color": "#0f1115",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }

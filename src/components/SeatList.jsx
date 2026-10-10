@@ -45,7 +45,11 @@ export default function SeatList({ seats, query, onQuery, selected, onSelect }) 
   }, [filtered, sort]);
 
   const toggleSort = (key) => {
-    setSort((s) => (s.key === key ? { key, dir: -s.dir } : { key, dir: -1 }));
+    setSort((s) => {
+      if (s.key === key) return { key, dir: -s.dir };
+      // Names read best A→Z; numeric measures read best largest-first.
+      return { key, dir: key === 'name' ? 1 : -1 };
+    });
   };
 
   return (

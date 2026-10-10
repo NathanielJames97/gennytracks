@@ -124,6 +124,23 @@ Wikimedia files and their licenses vary; each image retains source attribution
 where supplied. OpenStreetMap map tiles are fetched at runtime and credited to
 © OpenStreetMap contributors.
 
+## Polling snapshot and scheduled ingestion
+
+`public/data/polls.json` is an authored, attributed snapshot of selected UK
+voting-intention polls, adapted from BritPolls (CC BY 4.0) with original
+pollster links where verified. Each observation stores its own geography and
+source level; only observations with explicitly verified matching geography
+enter the descriptive average.
+
+A scheduled workflow (`.github/workflows/polls-refresh.yml`, daily at 06:00
+UTC) fetches the BritPolls voting-intention dataset and stages new rows in
+`data/source/polls/pending-ingest.json`. Staged rows are marked
+`geography: "unverified"` and are excluded from the average, so the pipeline
+cannot change what the site shows. Promotion is a manual, verified edit into
+`public/data/polls.json` (update its `updatedAt`), followed by
+`npm run build && npm run deploy`. Locally, `npm run polls:refresh` runs the
+same staging step; `--dry-run` previews without writing.
+
 ## Historical archive status
 
 The 2001 party-group results and matching UK-wide geometry are included. The source workbook mirror has not been byte-compared with the official download; Northern Ireland uses 1993 ward geometry for a 1995 Order referring to 1994 ward areas, and the ONS catalogue dataset-specific licence field is not set. The 1997 result and geometry are not included. See the historical source inventory for these limits and the next archive steps.

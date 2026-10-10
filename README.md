@@ -76,6 +76,8 @@ writes to **public/data/** and **public/photos/**; Vite copies those files into
 | npm run build | Generate election data, then build the production bundle into dist/ |
 | npm run validate:data | Validate generated JSON contracts and their cross-file relationships |
 | npm run build:data | Generate election snapshots, boundary files and photos |
+| npm run brand:assets | Regenerate app icon PNGs and the social share card from data |
+| npm run polls:refresh | Stage new BritPolls polling rows for human verification |
 | python scripts/export-2001-results.py | Refresh normalized 2001 results from the local historical workbook mirror |
 | python scripts/export-historical-results.py | Export 2010–2019 and notional 2019 results from Parliament's database |
 | npm test | Run the Vitest and React Testing Library suite |
@@ -133,6 +135,25 @@ methods are shown in Census details. Some older England and Wales measures
 remain unavailable elsewhere; they are not filled with estimates. These are
 area snapshots, not historical electorate data.
 
+## Share previews and installable app
+
+The site is installable as a PWA (relative `start_url`, so it works from a
+site root or a project subpath) and every page carries Open Graph and Twitter
+card tags pointing at the committed `public/og-card.png`. The card shows the
+wordmark beside a dot map of all 650 constituencies coloured by the declared
+2024 winners. Regenerate the icon PNGs and the card after a brand or data
+change with `npm run brand:assets` — the generator is pure Node
+(`scripts/generate-brand-assets.mjs` plus `scripts/lib/png.mjs`) and prints a
+SHA-256 fingerprint per file. See
+[the implementation record](docs/brand-and-polling-refresh.md) for validation
+evidence and the polling refresh pipeline.
+
+The OG tags hard-code the GitHub Pages canonical URL
+(`https://nathanieljames97.github.io/gennytracks/`). Update both meta URLs in
+`index.html` if the site moves to a custom domain. Per-view share cards (one
+image per shared seat or comparison) need a server-side rewrite for crawlers;
+a static site shares one site-level card.
+
 ## Attribution
 
 Election results for 2024 are from the House of Commons Library under the Open
@@ -174,8 +195,10 @@ filtered by geography, date and pollster. Its transparent descriptive average
 uses the latest verified non-MRP poll from each pollster in the chosen window,
 with equal pollster weights and missing party values omitted. Unverified source
 rows remain marked and are excluded from the average. The data file carries
-BritPolls attribution and original pollster links where verified; the app does
-not refresh it automatically. Compatible GB observations can populate the
+BritPolls attribution and original pollster links where verified; the authored
+snapshot is not refreshed by the app itself, but a scheduled workflow stages
+new provider rows for human verification (see [data provenance](docs/data-provenance.md)).
+Compatible GB observations can populate the
 scenario inputs with completion assumptions recorded.
 
 Open **Backtest** to compare both allocation methods across four

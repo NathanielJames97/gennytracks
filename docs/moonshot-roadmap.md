@@ -166,3 +166,107 @@ exports. It excludes missing movement measures and reports coverage. See
 [comparison-overhaul.md](comparison-overhaul.md) for the implemented plan,
 validation evidence and remaining work. Citation-ready image export and a
 same-boundary-only election picker remain open.
+
+## Interface and accessibility overhaul (10 October 2026)
+
+The app stylesheet was rebuilt around design tokens (surfaces, status colours,
+radii, shadows, focus rings) with no markup-driven behaviour changes. The
+header gained a dot-map brand mark; tabs and map modes are wrapped pill
+controls; metric tiles, tables, filters, warnings, legends, scrollbars, Leaflet
+controls and tooltips are restyled; loading and error states use a centred card
+with a spinner. Previously missing styles for the Census detail table and the
+Correlate scatter (which rendered as unstyled black-on-dark SVG) were added,
+and scatter points are now keyboard-focusable with button roles and labels.
+
+Bugs fixed alongside the restyle:
+
+- Census overview band selection compared a band row key with a metric label,
+  so clicking a band never highlighted anything; it now tracks band keys.
+- The seat list's Seat column first sorted Z→A because every new sort started
+  descending; name sorts now start ascending and measures descending.
+- The polling chart dropped an entire party polyline when any included poll
+  lacked a usable date (NaN polyline coordinates suppress the whole element);
+  date-less points are now skipped.
+- CRA-era leftovers were deleted: empty `src/components/Map.js`,
+  `CandidateList.js`, `ConstituencyList.js`, `styles/App.css`, the unused
+  React `src/logo.svg`, and the conflicting `src/index.css` (merged into
+  `App.css`, including the monospace code font).
+
+The prior source and browser validation record, together with the current
+checkout review and pending release evidence, is consolidated in
+[brand-and-polling-refresh.md](brand-and-polling-refresh.md). A visual pass on
+the current preview confirmed substantial control and text density at a narrow
+viewport: the header, eleven map modes and ten section tabs compete for the
+first screen. This is an initial narrow-screen observation; full responsive
+acceptance and deployed-host review remain open. The plan below addresses the
+information architecture before further visual polish.
+
+## Planned UI rework: reduce information density
+
+The current screen exposes most tools, methods and explanatory copy at once.
+The result is difficult to scan, especially on a phone, and delays access to
+the map and the election facts people came to inspect. Use progressive
+disclosure: make the default experience understandable at a glance, while
+keeping every existing analysis tool available in an explicit Advanced view.
+
+### Proposed experience
+
+- Add a persistent, clearly labelled **Simple / Advanced** switch. Start new
+  visitors in Simple. Remember their choice locally; keep election, data,
+  filters and shareable analysis state in the existing URL model.
+- Simple keeps the main journey close at hand: choose an election, inspect the
+  map, search for a seat, see its result and history, and open a concise
+  comparison. Use one compact **Colour by** control for the common map measures
+  instead of the full wrapped list of map modes.
+- Show a short description and compact key facts for the current view. Put
+  extended methodology, provenance and secondary explanations behind labelled
+  **Details** disclosures. Keep material qualifications visible in brief
+  context, including notional results, grouped 2001 results and incompatible
+  boundaries.
+- Advanced exposes the complete analysis workspace: all map modes and tabs,
+  filters, full party-vector scenario inputs, polling tables and sources,
+  detailed methods, census and correlation tools, backtests, and exports.
+- Keep deep links useful. If a URL opens a control or analysis that Simple
+  hides, switch to Advanced and focus or reveal the relevant section. The view
+  preference must not change election data, calculations or share-link meaning.
+- On narrow screens, give the map and core facts the first-screen priority.
+  Replace multi-row control wraps with compact selectors and a clear way to
+  switch between map and analysis. On wider screens, use a compact header and
+  keep selected-seat details adjacent to the map where space allows.
+- Keep labels, toggles and disclosures keyboard-operable, named for assistive
+  technology, and usable at zoomed text sizes. Do not rely on color alone for
+  map meaning or status.
+
+### Delivery sequence
+
+1. Inventory visible copy and controls by screen. Label each item as a quick
+   fact, a decision-critical caveat, or supporting method/source detail; remove
+   duplicated explanations and decide what belongs in each view.
+2. Implement the Simple / Advanced shell and local preference, including the
+   deep-link behavior and a visible route back to Advanced.
+3. Complete the Simple election-to-seat journey from the normal entry screen:
+   choose an election, scan the map, search/select a seat, and inspect its
+   result and history.
+4. Organize the remaining analysis screens into Advanced and apply the same
+   compact summary plus expandable methods pattern, starting with Scenario,
+   Polling and Compare where controls and explanatory text are most dense.
+5. Review representative desktop, tablet and phone widths and complete the
+   acceptance journeys before calling the rework finished.
+
+### Acceptance criteria
+
+- At 1440×900, 1024×768 and 390×844, the first screen has a clear hierarchy;
+  on phone, the map and core facts are available without scrolling past a wall
+  of controls. No horizontal overflow is introduced.
+- In Simple, a visitor can choose an election, find and select a seat, and read
+  its declared result and history without needing to understand advanced tools.
+- In Advanced, the existing polling-to-scenario-map journey, comparison tools,
+  exports and detailed data views remain reachable and preserve their current
+  calculations and URL state.
+- A shared deep link to an advanced-only control reveals it correctly. Changing
+  the display mode alone does not alter the shared analysis state.
+- Essential provenance and caveats remain clear in both views; notional
+  results, grouped 2001 data and boundary-compatibility limits stay explicit.
+- The toggle and detail disclosures work with keyboard navigation and screen
+  readers, and the reworked entry screen is checked in a visible browser at the
+  three target sizes.

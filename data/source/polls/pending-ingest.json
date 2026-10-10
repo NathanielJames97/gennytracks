@@ -1,0 +1,541 @@
+{
+  "schemaVersion": 1,
+  "kind": "poll-ingest-staging",
+  "updatedAt": "2026-10-10",
+  "promotedCount": 0,
+  "provider": {
+    "name": "BritPolls",
+    "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+    "providerUpdated": "2026-10-10",
+    "attribution": "Staged automatically from the BritPolls voting-intention dataset; see the app attribution for licence terms."
+  },
+  "reviewChecklist": [
+    "Confirm the pollster published the row and the headline shares match the source release.",
+    "Set geography to the verified value (GB or UK); unverified rows never enter the average.",
+    "Fill fieldwork dates, mode and an original publisher sourceUrl where available.",
+    "Replace the combined SNP/Plaid or combined-category values only if the source reports them separately.",
+    "Delete rows that cannot be verified, then run npm run build && npm run deploy to publish."
+  ],
+  "rows": [
+    {
+      "id": "britpolls-find-out-now-2026-10-07",
+      "pollster": "Find Out Now",
+      "date": "2026-10-07",
+      "sampleSize": 2590,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 25,
+        "Conservative": 20,
+        "Reform UK": 23,
+        "Liberal Democrats": 9,
+        "Green": 11,
+        "Scottish National Party": 3,
+        "Other": 7
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-yougov-2026-10-05",
+      "pollster": "YouGov",
+      "date": "2026-10-05",
+      "sampleSize": 2312,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 20,
+        "Reform UK": 22,
+        "Liberal Democrats": 11,
+        "Green": 11,
+        "Scottish National Party": 3,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-more-in-common-2026-10-05",
+      "pollster": "More in Common",
+      "date": "2026-10-05",
+      "sampleSize": 2088,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 29,
+        "Conservative": 21,
+        "Reform UK": 24,
+        "Liberal Democrats": 10,
+        "Green": 7,
+        "Scottish National Party": 2,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-survation-2026-10-05",
+      "pollster": "Survation",
+      "date": "2026-10-05",
+      "sampleSize": 1669,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 30,
+        "Conservative": 19,
+        "Reform UK": 24,
+        "Liberal Democrats": 9,
+        "Green": 8,
+        "Scottish National Party": 2,
+        "Other": 3
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-opinium-2026-10-02",
+      "pollster": "Opinium",
+      "date": "2026-10-02",
+      "sampleSize": 1552,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 30,
+        "Conservative": 17,
+        "Reform UK": 25,
+        "Liberal Democrats": 9,
+        "Green": 11,
+        "Scottish National Party": 2,
+        "Other": 5
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-find-out-now-2026-09-30",
+      "pollster": "Find Out Now",
+      "date": "2026-09-30",
+      "sampleSize": 2607,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 17,
+        "Reform UK": 23,
+        "Liberal Democrats": 9,
+        "Green": 12,
+        "Scottish National Party": 3,
+        "Other": 7
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-survation-2026-09-29",
+      "pollster": "Survation",
+      "date": "2026-09-29",
+      "sampleSize": 1548,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 29,
+        "Conservative": 19,
+        "Reform UK": 23,
+        "Liberal Democrats": 9,
+        "Green": 9,
+        "Scottish National Party": 3,
+        "Other": 4
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-more-in-common-2026-09-29",
+      "pollster": "More in Common",
+      "date": "2026-09-29",
+      "sampleSize": 2041,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 22,
+        "Reform UK": 21,
+        "Liberal Democrats": 11,
+        "Green": 9,
+        "Scottish National Party": 3,
+        "Other": 1
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-yougov-2026-09-28",
+      "pollster": "YouGov",
+      "date": "2026-09-28",
+      "sampleSize": 2310,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 24,
+        "Conservative": 19,
+        "Reform UK": 25,
+        "Liberal Democrats": 12,
+        "Green": 11,
+        "Scottish National Party": 2,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-lord-ashcroft-polls-2026-09-28",
+      "pollster": "Lord Ashcroft Polls",
+      "date": "2026-09-28",
+      "sampleSize": 5039,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 28,
+        "Conservative": 22,
+        "Reform UK": 19,
+        "Liberal Democrats": 9,
+        "Green": 14,
+        "Scottish National Party": 3,
+        "Other": 6
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-opinium-2026-09-25",
+      "pollster": "Opinium",
+      "date": "2026-09-25",
+      "sampleSize": 2050,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 28,
+        "Conservative": 17,
+        "Reform UK": 24,
+        "Liberal Democrats": 10,
+        "Green": 10,
+        "Scottish National Party": 3,
+        "Other": 6
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-bmg-research-2026-09-24",
+      "pollster": "BMG Research",
+      "date": "2026-09-24",
+      "sampleSize": 1515,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 28,
+        "Conservative": 20,
+        "Reform UK": 23,
+        "Liberal Democrats": 8,
+        "Green": 9,
+        "Scottish National Party": 3,
+        "Other": 1
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-find-out-now-2026-09-23",
+      "pollster": "Find Out Now",
+      "date": "2026-09-23",
+      "sampleSize": 2559,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 24,
+        "Conservative": 19,
+        "Reform UK": 23,
+        "Liberal Democrats": 12,
+        "Green": 13,
+        "Scottish National Party": 2,
+        "Other": 6
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-survation-2026-09-23",
+      "pollster": "Survation",
+      "date": "2026-09-23",
+      "sampleSize": 1224,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 21,
+        "Reform UK": 24,
+        "Liberal Democrats": 11,
+        "Green": 7,
+        "Scottish National Party": 3,
+        "Other": 4
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-yougov-2026-09-21",
+      "pollster": "YouGov",
+      "date": "2026-09-21",
+      "sampleSize": 2286,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 23,
+        "Conservative": 21,
+        "Reform UK": 21,
+        "Liberal Democrats": 12,
+        "Green": 14,
+        "Scottish National Party": 2,
+        "Other": 1
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-more-in-common-2026-09-21",
+      "pollster": "More in Common",
+      "date": "2026-09-21",
+      "sampleSize": 2113,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 26,
+        "Conservative": 23,
+        "Reform UK": 22,
+        "Liberal Democrats": 11,
+        "Green": 8,
+        "Scottish National Party": 2,
+        "Other": 1
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-more-in-common-mrp-2026-09-21",
+      "pollster": "More in Common (MRP)",
+      "date": "2026-09-21",
+      "sampleSize": 15765,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 26,
+        "Conservative": 22,
+        "Reform UK": 24,
+        "Liberal Democrats": 11,
+        "Green": 8,
+        "Scottish National Party": 2,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-opinium-2026-09-18",
+      "pollster": "Opinium",
+      "date": "2026-09-18",
+      "sampleSize": 2050,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 18,
+        "Reform UK": 24,
+        "Liberal Democrats": 10,
+        "Green": 11,
+        "Scottish National Party": 3,
+        "Other": 5
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-yougov-mrp-2026-09-18",
+      "pollster": "YouGov (MRP)",
+      "date": "2026-09-18",
+      "sampleSize": 16758,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 24,
+        "Conservative": 21,
+        "Reform UK": 22,
+        "Liberal Democrats": 12,
+        "Green": 12,
+        "Scottish National Party": 3,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    },
+    {
+      "id": "britpolls-find-out-now-2026-09-16",
+      "pollster": "Find Out Now",
+      "date": "2026-09-16",
+      "sampleSize": 2621,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 25,
+        "Conservative": 18,
+        "Reform UK": 23,
+        "Liberal Democrats": 11,
+        "Green": 12,
+        "Scottish National Party": 3,
+        "Other": 6
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-10-10",
+        "ingestedAt": "2026-10-10"
+      }
+    }
+  ]
+}

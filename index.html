@@ -3,13 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icons/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f1115" />
     <meta
       name="description"
-      content="An interactive map of all 650 UK parliamentary constituencies, coloured by the party that won them in the 2024 general election."
+      content="Explore UK general elections from 2001 to 2024 by place: constituency maps, boundary-aware comparisons, seat scenarios and sourced polling snapshots."
     />
     <link rel="manifest" href="%BASE_URL%manifest.json" />
+    <!-- Social previews. Crawlers read this static HTML, so the image is the
+         committed public/og-card.png (regenerate: npm run brand:assets).
+         Canonical base URL for the GitHub Pages deployment; update both URLs
+         if the site moves to a custom domain. -->
+    <meta property="og:site_name" content="Genny Tracks" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Genny Tracks — UK elections by place" />
+    <meta
+      property="og:description"
+      content="Explore UK general elections from 2001 to 2024 by place: constituency maps, boundary-aware comparisons, seat scenarios and sourced polling snapshots."
+    />
+    <meta property="og:url" content="https://nathanieljames97.github.io/gennytracks/" />
+    <meta property="og:image" content="https://nathanieljames97.github.io/gennytracks/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Genny Tracks wordmark beside a dot map of Great Britain and Northern Ireland coloured by the declared 2024 general election winners."
+    />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Genny Tracks — UK elections by place" />
+    <meta
+      name="twitter:description"
+      content="Explore UK general elections from 2001 to 2024 by place: constituency maps, boundary-aware comparisons, seat scenarios and sourced polling snapshots."
+    />
+    <meta name="twitter:image" content="https://nathanieljames97.github.io/gennytracks/og-card.png" />
     <title>Genny Tracks — UK constituencies and their MPs</title>
   </head>
   <body>

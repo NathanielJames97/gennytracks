@@ -97,7 +97,12 @@ export default function PollingPanel({ data, scenarioBaseline, onUseScenario }) 
           {parties.map((party) => {
             const points = chartPolls.map((poll) => {
               const entry = Object.entries(poll.shares || {}).find(([name]) => name === party);
-              return entry && Number.isFinite(Number(entry[1])) ? { poll, value: Number(entry[1]), x: xAt(pollDisplayDate(poll)) } : null;
+              if (!entry || !Number.isFinite(Number(entry[1]))) return null;
+              const x = xAt(pollDisplayDate(poll));
+              // A poll without a usable date would inject NaN into the polyline
+              // and suppress the whole line, so drop that point instead.
+              if (!Number.isFinite(x)) return null;
+              return { poll, value: Number(entry[1]), x };
             }).filter(Boolean);
             return <g key={party} className="poll-party-series">
               {points.length > 1 && <polyline points={points.map((point) => point.x + ',' + yAt(point.value)).join(' ')} style={{ stroke: PARTY_COLOURS[party] || '#c8cedb' }} />}

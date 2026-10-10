@@ -1,0 +1,62 @@
+# Scheduled polling snapshot refresh.
+#
+# Fetches the BritPolls voting-intention dataset daily and stages any
+# observations the authored snapshot (public/data/polls.json) does not have.
+# Staged rows are geography-unverified, so the app's descriptive average
+# ignores them: this job never changes what the site shows.
+#
+# Human loop after this job stages rows:
+#   1. Verify each staged row against the pollster's original release
+#      (geography, fieldwork dates, mode, publisher link).
+#   2. Promote verified rows into public/data/polls.json (bump updatedAt).
+#   3. npm run build && npm run deploy to publish.
+#
+# Deployment stays manual on purpose: verified curation, not the scheduler,
+# decides what the site publishes.
+
+name: Polling snapshot refresh
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: polls-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node scripts/refresh-polls.mjs --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit staged rows
+        id: commit
+        run: |
+          git add data/source/polls/pending-ingest.json
+          if git diff --cached --quiet -- data/source/polls/pending-ingest.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(polls): stage new BritPolls rows for review"
+            git push
+          fi
+
+      - name: Review reminder
+        if: steps.commit.outputs.changed == 'true'
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          New rows were staged in `data/source/polls/pending-ingest.json`. They are unverified and excluded from the polling average. Verify against the original releases, promote into `public/data/polls.json`, then `npm run deploy`.
+          EOF

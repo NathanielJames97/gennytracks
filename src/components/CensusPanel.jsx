@@ -165,8 +165,8 @@ export function CensusOverview({ summary, seats, onSelectSeat }) {
             rows={r.bands.map((b) => ({ ...b, value: b.n, colour: '#5cc8d7' }))}
             ariaLabel={`Distribution of ${r.m.label}`}
             formatValue={(v) => `${v} seats`}
-            onSelect={bandLabel => setActive(bandLabel === r.m.label ? null : r.m.label)}
-            selected={active === r.m.label ? r.m.label : null}
+            onSelect={(bandKey) => setActive((current) => (current === bandKey ? null : bandKey))}
+            selected={active}
           />
         </div>
       ))}

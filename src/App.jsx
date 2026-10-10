@@ -112,11 +112,12 @@ function SwingLegend({ summary }) {
   );
 }
 
-function ModeLegend({ mode, summary, election }) {
+function ModeLegend({ mode, summary, election, projected = false }) {
   if (mode === 'majority' && election?.marginDataAvailable === false) return <p className="legend-note">Winning margins are not available for this source.</p>;
   if (mode === 'winner' && election?.candidateDataGranularity === 'party-aggregate') return <p className="legend-note">Colour shows the leading reported party group; smaller parties are grouped together.</p>;
   if (mode === 'swing' && election?.candidateDataGranularity === 'party-aggregate' && !summary?.isNotional) return <p className="legend-note">Seat gains are not included in this party-group source.</p>;
   if (mode === 'winner') {
+    if (projected) return <p className="legend-note">Shaded by projected winners inside the scenario geography; seats outside it retain declared winners.</p>;
     return <p className="legend-note">Shaded by the party that won the seat.</p>;
   }
   if (mode === 'swing') {
@@ -508,18 +509,27 @@ export default function App() {
   if (status === 'error') {
     return (
       <div className="fallback">
-        <h1>Data unavailable</h1>
-        <p>
-          The generated data layer could not be loaded. Run <code>npm run build:data</code>
-          {' '}to create it, then <code>npm start</code>.
-        </p>
-        {error && <p className="error">{error.message}</p>}
+        <div className="fallback-card">
+          <h1>Data unavailable</h1>
+          <p>
+            The generated data layer could not be loaded. Run <code>npm run build:data</code>
+            {' '}to create it, then <code>npm start</code>.
+          </p>
+          {error && <p className="error">{error.message}</p>}
+        </div>
       </div>
     );
   }
 
   if (status === 'loading') {
-    return <div className="fallback"><h1>Loading results…</h1></div>;
+    return (
+      <div className="fallback">
+        <div className="fallback-card">
+          <div className="spinner" aria-hidden="true" />
+          <h1>Loading results…</h1>
+        </div>
+      </div>
+    );
   }
 
   const counts = listSeats.length;
@@ -545,13 +555,25 @@ export default function App() {
   return (
     <div className={tab === 'compare' ? 'App comparison-app' : ['scenario', 'polling', 'backtest'].includes(tab) ? 'App scenario-app' : 'App'}>
       <header>
-        <div className="title">
-          <h1>Genny Tracks</h1>
-          <p>
-            {summary?.totals
-              ? `UK general election ${election?.label || election?.year} · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
-              : `UK general election ${election?.label || election?.year || ''}`}
-          </p>
+        <div className="brand">
+          <svg className="brand-mark" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+            <circle cx="7" cy="7.5" r="3.2" fill="#E4003B" />
+            <circle cx="16" cy="6.5" r="2.5" fill="#0087DC" />
+            <circle cx="22.6" cy="9" r="1.9" fill="#FAA61A" />
+            <circle cx="8.6" cy="16.6" r="2.5" fill="#12B6CF" />
+            <circle cx="16.8" cy="15.2" r="3.2" fill="#02A95B" />
+            <circle cx="23" cy="17.8" r="1.6" fill="#9b8f40" />
+            <circle cx="12.4" cy="23" r="2.1" fill="#FDF38E" />
+            <circle cx="20" cy="23.4" r="1.5" fill="#98a0b3" />
+          </svg>
+          <div className="title">
+            <h1>Genny Tracks</h1>
+            <p>
+              {summary?.totals
+                ? `UK general election ${election?.label || election?.year} · ${listSeats.length} constituencies · turnout ${(summary.totals.turnout * 100).toFixed(1)}%`
+                : `UK general election ${election?.label || election?.year || ''}`}
+            </p>
+          </div>
         </div>
 
         <div className="header-actions">
@@ -776,7 +798,7 @@ export default function App() {
               {boundaries && <GeoJSON key={electionId} data={boundaries} onEachFeature={onEachFeature} />}
             </MapContainer>
             <div className="map-overlay">
-              <ModeLegend mode={mode} summary={summary} election={election} />
+              <ModeLegend mode={mode} summary={summary} election={election} projected={projectionAvailable && electionId === '2024'} />
               {projectionAvailable && <p className="projection-flag">2024 {scenarioGeography === 'NI' ? 'Northern Ireland' : scenarioGeography === 'UK' ? 'UK-wide' : 'Great Britain'} scenario</p>}
             </div>
             {boundaryLoading(boundaries) && <div className="loading">Loading boundaries…</div>}

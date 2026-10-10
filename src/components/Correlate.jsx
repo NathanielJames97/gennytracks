@@ -203,6 +203,7 @@ export default function Correlate({ seats, summary, onSelect, selected }) {
             <g key={party}>
               {list.map((p) => {
                 const isSel = selected?.id === p.seat.id;
+                const label = `${p.seat.name}: ${pct(p.x, 1)} ${xMetric.short}, ${yAxis.format(p.y)}`;
                 return (
                   <circle
                     key={p.seat.id}
@@ -212,11 +213,18 @@ export default function Correlate({ seats, summary, onSelect, selected }) {
                     fill={p.seat.colour}
                     className="dot"
                     opacity={isSel ? 1 : 0.62}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={label}
                     onClick={() => onSelect(isSel ? null : p.seat)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelect(isSel ? null : p.seat);
+                      }
+                    }}
                   >
-                    <title>
-                      {`${p.seat.name}: ${pct(p.x, 1)} ${xMetric.short}, ${yAxis.format(p.y)}`}
-                    </title>
+                    <title>{label}</title>
                   </circle>
                 );
               })}
