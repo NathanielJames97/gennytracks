@@ -2,22 +2,37 @@ import React, { useMemo, useState } from 'react';
 import BarChart from './BarChart';
 import { pct, pctAdaptive } from '../lib/analysis';
 
+const CENSUS_SOURCE_LINKS = {
+  'ons-census-2021': [
+    { label: 'ONS / Nomis Census 2021 tables', href: 'https://www.nomisweb.co.uk/census/2021/bulk' },
+    { label: 'ONS July 2024 constituency lookup', href: 'https://www.data.gov.uk/dataset/f004674d-d0db-467b-9bd7-009b9d1e2fc6/msoa-2021-to-westminster-parliamentary-constituency-july-2024-best-fit-lookup-in-ew' },
+  ],
+  'nrs-census-2022': [
+    { label: 'NRS Census 2022 output-area tables', href: 'https://www.scotlandscensus.gov.uk/documents/2022-output-area-data/' },
+    { label: 'NRS OA22 to UKPC24 lookup', href: 'https://nrscotland.gov.uk/publications/2022-census-geography-products/' },
+  ],
+  'nisra-census-2021': [
+    { label: 'NISRA 2021 PCON24 table', href: 'https://build.nisra.gov.uk/en/custom/data?d=PEOPLE&v=PARLCON24&v=AGE_BAND_AGG11' },
+    { label: 'NISRA Crown copyright and licence', href: 'https://www.nisra.gov.uk/crown-copyright' },
+  ],
+};
+
 /**
  * Census detail for one seat, shown inside the seat panel area.
  *
- * Census 2021 covers England and Wales only, so Scottish and Northern Irish
- * seats get an explicit explanation rather than a blank space.
+ * Available census measures use official 2021 England and Wales tables.
+ * Scottish (2022) and Northern Irish (2021) inputs are not yet included.
  */
 export default function CensusPanel({ seat }) {
   if (!seat) return null;
   if (!seat.census) {
     return (
       <section className="census-panel">
-        <h3 className="sub">Census 2021</h3>
+        <h3 className="sub">Census context</h3>
         <p className="note">
-          No census data for this seat. The decennial census covers England and
-          Wales only, so the {seat.country === 'Scotland' ? '57 Scottish'
-            : '18 Northern Irish'} seats have none.
+          No census measures are available for this seat yet. {seat.country === 'Scotland'
+            ? 'Scotland’s census was in 2022; its published tables and allocation to 2024 constituencies have not been added.'
+            : 'Northern Ireland’s Census 2021 tables and allocation to 2024 constituencies have not been added.'}
         </p>
       </section>
     );
@@ -26,8 +41,12 @@ export default function CensusPanel({ seat }) {
   const c = seat.census;
 
   const rows = [
+    { label: 'Residents aged 65 and over', value: c.age65Plus, format: (v) => pct(v, 1) },
+    { label: 'Owner occupation or shared ownership', value: c.ownerOccupiedShare, format: (v) => pct(v, 1) },
     { label: 'Deprived households', value: c.deprived, format: (v) => pct(v, 1) },
-    { label: 'Degree or above', value: c.degree, format: (v) => pct(v, 1) },
+    { label: 'Level 4 qualifications or above (England and Wales, age 16+)', value: c.degree, format: (v) => pct(v, 1) },
+    { label: 'Level 4 qualifications or above (Northern Ireland, age 16+)', value: c.niLevel4PlusShare, format: (v) => pct(v, 1) },
+    { label: 'Degree-level qualifications or above (Scotland, age 16+)', value: c.scotlandDegreeShare, format: (v) => pct(v, 1) },
     { label: 'No qualifications', value: c.noQualifications, format: (v) => pct(v, 1) },
     { label: 'Ethnic minority', value: c.minority, format: (v) => pct(v, 1) },
     { label: 'White British', value: c.whiteBritish, format: (v) => pct(v, 1) },
@@ -39,10 +58,10 @@ export default function CensusPanel({ seat }) {
 
   return (
     <section className="census-panel">
-      <h3 className="sub">Who lives here</h3>
+      <h3 className="sub">Who lives here · Census {c.censusYear}</h3>
       <dl className="census-stats">
         <div>
-          <dt>Residents (Census 2021)</dt>
+          <dt>Residents (Census {c.censusYear})</dt>
           <dd>{c.population.toLocaleString()}</dd>
         </div>
         <div>
@@ -76,7 +95,17 @@ export default function CensusPanel({ seat }) {
         </p>
       )}
       <p className="note muted">
-        Census 2021, aggregated from MSOA areas via the ONS best-fit lookup.
+        {c.censusSource}. {c.censusMethod}. Age is the share of all
+        residents aged 65+; housing divides owner-occupied households in
+        Scotland and Northern Ireland, and owned or shared-ownership households
+        in England and Wales, by occupied households. Education category labels and thresholds
+        differ by country, as noted above. Sources:{' '}
+        {(CENSUS_SOURCE_LINKS[c.censusSourceId] ?? []).map((source, index) => (
+          <React.Fragment key={source.href}>
+            {index > 0 ? '; ' : ''}
+            <a href={source.href} target="_blank" rel="noreferrer">{source.label}</a>
+          </React.Fragment>
+        ))}
       </p>
     </section>
   );
@@ -114,16 +143,24 @@ export function CensusOverview({ summary, seats, onSelectSeat }) {
   return (
     <div className="census-overview">
       <p className="note">
-        {summary.census.note} Census 2021, {summary.census.seats.toLocaleString()} seats.
+        {summary.census.note} {summary.census.seats.toLocaleString()} seats currently have data.
       </p>
 
       {rows.map((r) => (
         <div key={r.key}>
           <h3 className="sub">
             {r.m.label}
-            <span className="muted"> · median {pct(r.median, 1)}</span>
+            <span className="muted"> · median {r.m.unit === 'people'
+              ? Math.round(r.median).toLocaleString()
+              : pct(r.median, 1)}</span>
           </h3>
-          <p className="note">{r.m.hint}</p>
+          <p className="note">
+            {r.m.hint} {r.m.definition} Coverage: {Object.values(r.m.coverageByCountry ?? {}).reduce((sum, n) => sum + n, 0)} seats ({Object.entries(r.m.coverageByCountry ?? {})
+              .filter(([, n]) => n > 0)
+              .map(([country, n]) => `${country} ${n}`)
+              .join(', ')}).
+            {r.m.sourceUrl && <> Source: <a href={r.m.sourceUrl} target="_blank" rel="noreferrer">{r.m.source}</a>.</>}
+          </p>
           <BarChart
             rows={r.bands.map((b) => ({ ...b, value: b.n, colour: '#5cc8d7' }))}
             ariaLabel={`Distribution of ${r.m.label}`}

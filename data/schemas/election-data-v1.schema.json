@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gennytracks.invalid/schemas/election-data-v1.schema.json",
+  "title": "Genny Tracks election data v1",
+  "type": "object",
+  "$defs": {
+    "source": {
+      "type": "object", "required": ["id", "name", "url", "license", "coverage", "attribution"],
+      "properties": {
+        "id": {"type":"string","minLength":1}, "name": {"type":"string","minLength":1},
+        "url": {"type":"string","pattern":"^https?://"}, "license": {"type":"string","minLength":1},
+        "coverage": {"type":"string","minLength":1}, "attribution": {"type":"string","minLength":1}
+      }, "additionalProperties": true
+    },
+    "descriptor": {
+      "type":"object",
+      "required":["id","year","date","label","boundarySetId","seats","sourceId","resultsFile","summaryFile","boundariesFile","candidateDataGranularity"],
+      "properties":{
+        "id":{"type":"string","minLength":1},"year":{"type":"integer","minimum":1800,"maximum":2200},
+        "date":{"type":"string","pattern":"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},"label":{"type":"string","minLength":1},
+        "boundarySetId":{"type":"string","minLength":1},"seats":{"type":"integer","minimum":1},
+        "sourceId":{"type":"string","minLength":1},"resultsFile":{"type":"string","minLength":1},
+        "summaryFile":{"type":"string","minLength":1},"boundariesFile":{"type":"string","minLength":1},
+        "candidateDataGranularity":{"enum":["candidate","party-aggregate","winner-only"]},"isNotional":{"type":"boolean"}
+      }, "additionalProperties":true
+    },
+    "boundarySet":{
+      "type":"object","required":["id","label","sourceId","seats"],
+      "properties":{"id":{"type":"string","minLength":1},"label":{"type":"string","minLength":1},
+        "sourceId":{"type":"string","minLength":1},"seats":{"type":"integer","minimum":1},
+        "validFrom":{"type":"string","pattern":"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+        "validTo":{"type":"string","pattern":"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"}},
+      "additionalProperties":true
+    },
+    "manifest":{
+      "type":"object","required":["schemaVersion","defaultElection","elections","boundarySets","sources","crosswalks"],
+      "properties":{"schemaVersion":{"const":1},"defaultElection":{"type":"string","minLength":1},
+        "elections":{"type":"array","items":{"$ref":"#/$defs/descriptor"},"minItems":1},
+        "boundarySets":{"type":"array","items":{"$ref":"#/$defs/boundarySet"},"minItems":1},
+        "sources":{"type":"array","items":{"$ref":"#/$defs/source"},"minItems":1},
+        "crosswalks":{"type":"array","items":{"$ref":"#/$defs/crosswalkDescriptor"}},
+        "caveats":{"type":"array","items":{"type":"string"}}},"additionalProperties":true
+    },
+    "candidate":{
+      "type":"object","required":["party","votes"],
+      "properties":{"name":{"type":["string","null"]},"party":{"type":"string","minLength":1},
+        "votes":{"type":"number","minimum":0},"share":{"type":["number","null"],"minimum":0,"maximum":1},
+        "rank":{"type":["integer","null"],"minimum":1},"notionalAggregate":{"type":"boolean"}},
+      "additionalProperties":true
+    },
+    "partyTotal":{
+      "type":"object","required":["party","votes"],
+      "properties":{"party":{"type":"string","minLength":1},"votes":{"type":"number","minimum":0},
+        "share":{"type":["number","null"],"minimum":0,"maximum":1},"isGrouped":{"type":"boolean"}},
+      "additionalProperties":true
+    },
+    "censusSeat":{
+      "type":"object","required":["censusYear","censusSource","censusSourceId","censusMethod"],
+      "properties":{
+        "population":{"type":["number","null"],"minimum":0},
+        "age65Plus":{"type":["number","null"],"minimum":0,"maximum":1},
+        "ownerOccupiedShare":{"type":["number","null"],"minimum":0,"maximum":1},
+        "censusYear":{"type":"integer","minimum":1900,"maximum":2200},
+        "censusSource":{"type":"string","minLength":1},
+        "censusSourceId":{"type":"string","minLength":1},
+        "censusMethod":{"type":"string","minLength":1},
+        "niLevel4PlusShare":{"type":["number","null"],"minimum":0,"maximum":1},
+        "scotlandDegreeShare":{"type":["number","null"],"minimum":0,"maximum":1},
+        "deprived":{"type":["number","null"],"minimum":0,"maximum":1},
+        "deprivationIndex":{"type":["number","null"],"minimum":0,"maximum":4},
+        "minority":{"type":["number","null"],"minimum":0,"maximum":1},
+        "whiteBritish":{"type":["number","null"],"minimum":0,"maximum":1},
+        "degree":{"type":["number","null"],"minimum":0,"maximum":1},
+        "noQualifications":{"type":["number","null"],"minimum":0,"maximum":1},
+        "noReligion":{"type":["number","null"],"minimum":0,"maximum":1},
+        "christian":{"type":["number","null"],"minimum":0,"maximum":1},
+        "muslim":{"type":["number","null"],"minimum":0,"maximum":1},
+        "hindu":{"type":["number","null"],"minimum":0,"maximum":1},
+        "female":{"type":["number","null"],"minimum":0,"maximum":1}
+      },
+      "additionalProperties":true
+    },
+    "censusMetric":{
+      "type":"object",
+      "required":["key","seatKey","label","hint","unit","seats","coverageByCountry","source","sourceIds","yearByCountry","definition"],
+      "properties":{
+        "key":{"type":"string","minLength":1},"seatKey":{"type":"string","minLength":1},
+        "label":{"type":"string","minLength":1},"hint":{"type":"string","minLength":1},
+        "short":{"type":"string"},"unit":{"enum":["share","people"]},
+        "seats":{"type":"integer","minimum":0,"maximum":650},
+        "coverageByCountry":{"type":"object","required":["England","Wales","Scotland","Northern Ireland"],
+          "properties":{"England":{"type":"integer","minimum":0,"maximum":543},"Wales":{"type":"integer","minimum":0,"maximum":32},
+            "Scotland":{"type":"integer","minimum":0,"maximum":57},"Northern Ireland":{"type":"integer","minimum":0,"maximum":18}},"additionalProperties":false},
+        "source":{"type":"string","minLength":1},"sourceUrl":{"type":"string","pattern":"^https?://"},
+        "sourceIds":{"type":"object","additionalProperties":{"type":"string","minLength":1}},
+        "yearByCountry":{"type":"object","additionalProperties":{"type":"integer","minimum":1900,"maximum":2200}},
+        "definition":{"type":"string","minLength":1},"countries":{"type":"array","items":{"type":"string"}},
+        "domain":{"type":"array","items":{"type":"number"},"minItems":2,"maxItems":2},
+        "ticks":{"type":"array","items":{"type":"string"}},"min":{"type":"number"},"p10":{"type":"number"},
+        "median":{"type":"number"},"p90":{"type":"number"},"max":{"type":"number"},
+        "observed":{"type":"array","items":{"type":"number"},"minItems":2,"maxItems":2}
+      },
+      "additionalProperties":true
+    },
+    "censusSummary":{
+      "type":"object",
+      "required":["source","note","seats","countryCoverage","allocationByCountry","countrySources","metrics"],
+      "properties":{
+        "source":{"type":"string","minLength":1},"note":{"type":"string","minLength":1},
+        "seats":{"type":"integer","minimum":0,"maximum":650},
+        "countryCoverage":{"type":"object","required":["England","Wales","Scotland","Northern Ireland"],
+          "properties":{"England":{"type":"integer","minimum":0,"maximum":543},"Wales":{"type":"integer","minimum":0,"maximum":32},
+            "Scotland":{"type":"integer","minimum":0,"maximum":57},"Northern Ireland":{"type":"integer","minimum":0,"maximum":18}},"additionalProperties":false},
+        "allocationByCountry":{"type":"object","additionalProperties":{"type":"object"}},
+        "countrySources":{"type":"object","required":["England","Wales","Scotland","Northern Ireland"],
+          "additionalProperties":{"type":"object","required":["sourceId","year","source","allocation","status"],
+            "properties":{"sourceId":{"type":"string","minLength":1},"year":{"type":"integer"},"source":{"type":"string","minLength":1},
+              "allocation":{"type":"string","minLength":1},"status":{"type":"string","minLength":1}},"additionalProperties":true}},
+        "metrics":{"type":"array","items":{"$ref":"#/$defs/censusMetric"},"minItems":1}
+      },
+      "additionalProperties":true
+    },
+    "seat":{
+      "type":"object","required":["id","name","partyGroup","validVotes","candidates"],
+      "properties":{"id":{"type":"string","minLength":1},"name":{"type":"string","minLength":1},
+        "partyGroup":{"type":"string","minLength":1},"validVotes":{"type":["number","null"],"minimum":0},
+        "electorate":{"type":["number","null"],"minimum":0},"invalidVotes":{"type":["number","null"],"minimum":0},"invalidVotesKnown":{"type":"boolean"},"majority":{"type":["number","null"],"minimum":0},
+        "winnerVotes":{"type":["number","null"],"minimum":0},"winnerShare":{"type":["number","null"],"minimum":0,"maximum":1},
+        "census":{"oneOf":[{"$ref":"#/$defs/censusSeat"},{"type":"null"}]},
+        "candidates":{"type":"array","items":{"$ref":"#/$defs/candidate"}},
+        "partyTotals":{"type":"array","items":{"$ref":"#/$defs/partyTotal"}}},
+      "additionalProperties":true
+    },
+    "resultBundle":{
+      "type":"object","required":["schemaVersion","electionId","results"],
+      "properties":{"schemaVersion":{"const":1},"electionId":{"type":"string","minLength":1},
+        "results":{"type":"array","items":{"$ref":"#/$defs/seat"},"minItems":1}},
+      "additionalProperties":true
+    },
+    "summary":{
+      "type":"object","required":["schemaVersion","id","total","totals","parties","voteShare"],
+      "properties":{"schemaVersion":{"const":1},"id":{"type":"string","minLength":1},
+        "total":{"type":"integer","minimum":1},
+        "census":{"$ref":"#/$defs/censusSummary"},
+        "totals":{"type":"object","required":["electorate","validVotes","invalidVotes","candidates"],
+          "properties":{"electorate":{"type":"number","minimum":0},"validVotes":{"type":"number","minimum":0},
+            "invalidVotes":{"type":["number","null"],"minimum":0},"candidates":{"type":"integer","minimum":0}},
+          "additionalProperties":true},
+        "parties":{"type":"array","items":{"type":"object","required":["party","seats"],
+          "properties":{"party":{"type":"string"},"seats":{"type":"integer","minimum":0}},"additionalProperties":true}},
+        "voteShare":{"type":"array","items":{"type":"object","required":["party","votes","share"],
+          "properties":{"party":{"type":"string"},"votes":{"type":"number","minimum":0},"share":{"type":"number","minimum":0,"maximum":1}},
+          "additionalProperties":true}}},
+      "additionalProperties":true
+    },
+    "position":{"type":"array","items":{"type":"number"},"minItems":2,"maxItems":3},
+    "ring":{"type":"array","items":{"$ref":"#/$defs/position"},"minItems":4},
+    "polygon":{"type":"array","items":{"$ref":"#/$defs/ring"},"minItems":1},
+    "multiPolygon":{"type":"array","items":{"$ref":"#/$defs/polygon"},"minItems":1},
+    "geometry":{"oneOf":[
+      {"type":"object","required":["type","coordinates"],"properties":{"type":{"const":"Polygon"},"coordinates":{"$ref":"#/$defs/polygon"}},"additionalProperties":true},
+      {"type":"object","required":["type","coordinates"],"properties":{"type":{"const":"MultiPolygon"},"coordinates":{"$ref":"#/$defs/multiPolygon"}},"additionalProperties":true}
+    ]},
+    "feature":{
+      "type":"object","required":["type","id","properties","geometry"],
+      "properties":{"type":{"const":"Feature"},"id":{"type":["string","number"]},
+        "properties":{"type":"object","required":["id","name"],"properties":{"id":{"type":["string","number"]},"name":{"type":"string","minLength":1},
+          "population":{"type":["number","null"],"minimum":0},"age65Plus":{"type":["number","null"],"minimum":0,"maximum":1},
+          "ownerOccupiedShare":{"type":["number","null"],"minimum":0,"maximum":1},"niLevel4PlusShare":{"type":["number","null"],"minimum":0,"maximum":1},
+          "scotlandDegreeShare":{"type":["number","null"],"minimum":0,"maximum":1},"deprived":{"type":["number","null"],"minimum":0,"maximum":1},
+          "minority":{"type":["number","null"],"minimum":0,"maximum":1},"degree":{"type":["number","null"],"minimum":0,"maximum":1},
+          "noReligion":{"type":["number","null"],"minimum":0,"maximum":1}},"additionalProperties":true},
+        "geometry":{"$ref":"#/$defs/geometry"}},
+      "additionalProperties":true
+    },
+    "featureCollection":{
+      "type":"object","required":["schemaVersion","type","features"],
+      "properties":{"schemaVersion":{"const":1},"type":{"const":"FeatureCollection"},
+        "features":{"type":"array","items":{"$ref":"#/$defs/feature"},"minItems":1}},
+      "additionalProperties":true
+    },
+    "overlap":{
+      "type":"object","required":["fromCode","toCode"],
+      "properties":{"fromCode":{"type":"string","minLength":1},"toCode":{"type":"string","minLength":1},
+        "fromPopulationShare":{"type":"number","minimum":0,"maximum":1},"toPopulationShare":{"type":"number","minimum":0,"maximum":1},
+        "fromResidentialShare":{"type":"number","minimum":0,"maximum":1},"toResidentialShare":{"type":"number","minimum":0,"maximum":1},
+        "fromAreaShare":{"type":"number","minimum":0,"maximum":1},"toAreaShare":{"type":"number","minimum":0,"maximum":1}},
+      "additionalProperties":true
+    },
+    "crosswalkDescriptor":{
+      "type":"object","required":["id","file","sourceId","fromBoundarySetId","toBoundarySetId"],
+      "properties":{"id":{"type":"string","minLength":1},"file":{"type":"string","minLength":1},
+        "sourceId":{"type":"string","minLength":1},"fromBoundarySetId":{"type":"string","minLength":1},
+        "toBoundarySetId":{"type":"string","minLength":1}},"additionalProperties":true
+    },
+    "crosswalk":{
+      "type":"object","required":["schemaVersion","sourceId","fromBoundarySetId","toBoundarySetId","overlaps"],
+      "properties":{"schemaVersion":{"const":1},"fromBoundarySetId":{"type":"string","minLength":1},
+        "sourceId":{"type":"string","minLength":1},"toBoundarySetId":{"type":"string","minLength":1},
+        "overlaps":{"type":"array","items":{"$ref":"#/$defs/overlap"},"minItems":1}},
+      "additionalProperties":true
+    }
+  }
+}
+

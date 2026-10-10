@@ -1,0 +1,492 @@
+<Legislation xmlns="http://www.legislation.gov.uk/namespaces/legislation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992" NumberOfProvisions="4" xsi:schemaLocation="http://www.legislation.gov.uk/namespaces/legislation http://www.legislation.gov.uk/schema/legislation.xsd" SchemaVersion="1.0"><ukm:Metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dct="http://purl.org/dc/terms/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:ukm="http://www.legislation.gov.uk/namespaces/metadata">
+					<dc:identifier>http://www.legislation.gov.uk/uksi/1995/2992/made</dc:identifier><dc:title>The Parliamentary Constituencies (Northern Ireland) Order 1995</dc:title><dc:subject>Northern Ireland Assembly</dc:subject><dc:publisher>King's Printer of Acts of Parliament</dc:publisher><dc:modified>2011-07-04</dc:modified><dc:subject scheme="SIheading">REPRESENTATION OF THE PEOPLE;REDISTRIBUTION OF SEATS AND REVIEW OF ELECTION ARRANGEMENTS</dc:subject>
+					<dc:description>This Order gives effect without modification to the recommendations set out in the report and supplementary report of the Boundary Commission for Northern Ireland dated 20th June 1995. The report sets out proposals for parliamentary constituencies in Northern Ireland consequent on a review by the Commission of the representation in the House of Commons of Northern Ireland.</dc:description>
+					<atom:link rel="self" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.xml" type="application/xml"/><atom:link rel="http://www.legislation.gov.uk/def/navigation/resources" href="http://www.legislation.gov.uk/uksi/1995/2992/resources" title="More Resources"/>
+					
+					
+					
+					<atom:link rel="http://www.legislation.gov.uk/def/navigation/act" href="http://www.legislation.gov.uk/uksi/1995/2992/made" title="whole act"/><atom:link rel="http://www.legislation.gov.uk/def/navigation/introduction" href="http://www.legislation.gov.uk/uksi/1995/2992/introduction/made" title="introduction"/><atom:link rel="http://www.legislation.gov.uk/def/navigation/signature" href="http://www.legislation.gov.uk/uksi/1995/2992/signature/made" title="signature"/><atom:link rel="http://www.legislation.gov.uk/def/navigation/note" href="http://www.legislation.gov.uk/uksi/1995/2992/note/made" title="note"/>
+					<atom:link rel="http://www.legislation.gov.uk/def/navigation/body" href="http://www.legislation.gov.uk/uksi/1995/2992/body/made" title="body"/>
+					<atom:link rel="http://www.legislation.gov.uk/def/navigation/schedules" href="http://www.legislation.gov.uk/uksi/1995/2992/schedules/made" title="schedules"/>
+					
+										
+					
+					
+					
+					<atom:link rel="alternate" type="application/rdf+xml" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.rdf" title="RDF/XML"/><atom:link rel="alternate" type="application/akn+xml" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.akn" title="AKN"/><atom:link rel="alternate" type="application/xhtml+xml" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.xht" title="HTML snippet"/><atom:link rel="alternate" type="text/html" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.htm" title="Website (XHTML) Default View"/><atom:link rel="alternate" type="text/csv" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.csv" title="CSV"/><atom:link rel="alternate" type="application/pdf" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.pdf" title="PDF"/>
+					<atom:link rel="alternate" type="application/akn+xhtml" href="http://www.legislation.gov.uk/uksi/1995/2992/made/data.html" title="HTML5 snippet"/>
+
+					
+					<atom:link rel="http://purl.org/dc/terms/tableOfContents" hreflang="en" href="http://www.legislation.gov.uk/uksi/1995/2992/contents/made" title="Table of Contents"/>
+					
+					
+					
+					
+					<ukm:SecondaryMetadata><ukm:DocumentClassification>
+<ukm:DocumentCategory Value="secondary"/>
+<ukm:DocumentMainType Value="UnitedKingdomStatutoryInstrument"/>
+<ukm:DocumentStatus Value="final"/>
+<ukm:DocumentMinorType Value="order"/>
+</ukm:DocumentClassification><ukm:Year Value="1995"/><ukm:Number Value="2992"/><ukm:Made Date="1995-11-23"/><ukm:RoyalPresence Date="1995-11-23"/><ukm:ISBN Value="0110536770"/></ukm:SecondaryMetadata>
+					
+
+                    
+									 
+					
+					
+					<ukm:Statistics>
+									<ukm:TotalParagraphs Value="4"/>
+									<ukm:BodyParagraphs Value="4"/>
+									<ukm:ScheduleParagraphs Value="0"/>
+									<ukm:AttachmentParagraphs Value="0"/>
+									<ukm:TotalImages Value="0"/>
+								</ukm:Statistics>
+				</ukm:Metadata><Secondary>
+<SecondaryPrelims DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/introduction/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/introduction">
+<Number>1995 No. 2992</Number>
+<SubjectInformation><Subject>
+<Title>REPRESENTATION OF THE PEOPLE</Title>
+<Subtitle>REDISTRIBUTION OF SEATS AND REVIEW OF ELECTION ARRANGEMENTS</Subtitle>
+</Subject>
+</SubjectInformation>
+<Title>The Parliamentary Constituencies (Northern Ireland) Order 1995</Title>
+<MadeDate>
+<Text>Made</Text>
+<DateText>23rd November 1995</DateText>
+</MadeDate>
+<ComingIntoForce>
+<Text>Coming into force in accordance with article 1(2)</Text>
+</ComingIntoForce>
+<SecondaryPreamble>
+<RoyalPresence>
+<Para>
+<Text>At the Court at Buckingham Palace, the 23rd day of November 1995</Text>
+<Text>Present,</Text>
+<Text>The Queen’s Most Excellent Majesty in Council</Text>
+</Para>
+</RoyalPresence>
+<IntroductoryText>
+<P>
+<Text>Whereas in pursuance of section 3(1) of the Parliamentary Constituencies Act 1986<FootnoteRef Ref="f00001"/> and section 28(2) of the Northern Ireland Constitution Act 1973<FootnoteRef Ref="f00002"/>, the Boundary Commission for Northern Ireland have submitted to the Secretary of State a report dated 20th June 1995 showing the constituencies into which they recommend, in accordance with that Act, that Northern Ireland should be divided, together with a supplementary report showing the number of members that they recommend should be returned to the Northern Ireland Assembly for each of those constituencies;</Text>
+</P>
+<P>
+<Text>And whereas the Secretary of State has laid the report and supplementary report before Parliament together with the draft of this Order in Council to give effect, without modifications, to the recommendations contained in the report and supplementary report and each House of Parliament has by resolution approved the said draft;</Text>
+</P>
+</IntroductoryText>
+<EnactingText>
+<Para>
+<Text>Now, therefore, Her Majesty, in pursuance of section 4 of the Parliamentary Constituencies Act 1986 (as enacted and as applied by section 28(4) of the Northern Ireland Constitution Act 1973<FootnoteRef Ref="f00003"/>) and section 28(5) of the Northern Ireland Constitution Act 1973<FootnoteRef Ref="f00004"/>, is pleased, by and with the advice of Her Privy Council, to order, and it is hereby ordered, as follows:</Text>
+</Para>
+</EnactingText>
+</SecondaryPreamble>
+</SecondaryPrelims>
+<Body DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/body/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/body" NumberOfProvisions="4" NumberFormat="default">
+<P1 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/1/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/1" id="article-1">
+<Pnumber>1</Pnumber>
+<P1para>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/1/1/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/1/1" id="article-1-1">
+<Pnumber>1</Pnumber>
+<P2para>
+<Text>This Order may be cited as the Parliamentary Constituencies (Northern Ireland) Order 1995.</Text>
+</P2para>
+</P2>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/1/2/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/1/2" id="article-1-2">
+<Pnumber>2</Pnumber>
+<P2para>
+<Text>Subject to section 4(6) of the Parliamentary Constituencies Act 1986 and section 28(6) of the Northern Ireland Constitution Act 1973<FootnoteRef Ref="f00005"/>, this Order shall come into force on the fourteenth day after the day on which it is made.</Text>
+</P2para>
+</P2>
+</P1para>
+</P1>
+<P1 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2" id="article-2">
+<Pnumber>2</Pnumber>
+<P1para>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/1/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2/1" id="article-2-1">
+<Pnumber>1</Pnumber>
+<P2para>
+<Text>For all the constituencies in Northern Ireland there shall be substituted the constituencies which—</Text>
+<P3 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/1/a/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2/1/a" id="article-2-1-a">
+<Pnumber>a</Pnumber>
+<P3para>
+<Text>are named in the left-hand column of the Schedule to this Order;</Text>
+</P3para>
+</P3>
+<P3 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/1/b/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2/1/b" id="article-2-1-b">
+<Pnumber>b</Pnumber>
+<P3para>
+<Text>are designated in that column as either county constituencies or borough constituencies; and</Text>
+</P3para>
+</P3>
+<P3 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/1/c/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2/1/c" id="article-2-1-c">
+<Pnumber>c</Pnumber>
+<P3para>
+<Text>comprise the areas set out in the right-hand column of that Schedule.</Text>
+</P3para>
+</P3>
+</P2para>
+</P2>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/2/2/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/2/2" id="article-2-2">
+<Pnumber>2</Pnumber>
+<P2para>
+<Text>The areas set out in the right-hand column of the Schedule to this Order are local government areas as they existed on 1st June 1994.</Text>
+</P2para>
+</P2>
+</P1para>
+</P1>
+<P1 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/3/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/3" id="article-3">
+<Pnumber>3</Pnumber>
+<P1para>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/3/1/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/3/1" id="article-3-1">
+<Pnumber>1</Pnumber>
+<P2para>
+<Text>Section 1(1) of the Northern Ireland Assembly Act 1973<FootnoteRef Ref="f00006"/> shall be amended by the substitution of the words “90 members” for the words “85 members”.</Text>
+</P2para>
+</P2>
+<P2 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/3/2/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/3/2" id="article-3-2">
+<Pnumber>2</Pnumber>
+<P2para>
+<Text>For the Schedule to the Northern Ireland Assembly Act 1973<FootnoteRef Ref="f00007"/>, there shall be substituted the following Schedule:</Text>
+<BlockAmendment TargetClass="unknown" TargetSubClass="unknown" Context="schedule" Format="default" NumberFormat="default">
+<Schedule NumberFormat="default">
+<Number>SCHEDULE</Number>
+<TitleBlock>
+<Title>MEMBERS TO BE RETURNED BY CONSTITUENCIES</Title>
+</TitleBlock>
+<ScheduleBody>
+<Tabular Orientation="portrait">
+<table xmlns="http://www.w3.org/1999/xhtml" cols="2">
+<thead><tr><th colspan="1" rowspan="1"><Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">Constituency</Emphasis></th><th colspan="1" rowspan="1"><Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">Number of members to be returned</Emphasis></th></tr></thead>
+<tbody><tr><td colspan="1" rowspan="1">Belfast East</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Belfast North</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Belfast South</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Belfast West</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">East Antrim</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">East Londonderry</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Fermanagh and South Tyrone</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Foyle</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Lagan Valley</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Mid Ulster</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Newry and Armagh</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">North Antrim</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">North Down</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">South Antrim</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">South Down</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Strangford</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">Upper Bann</td><td colspan="1" rowspan="1">5</td></tr><tr><td colspan="1" rowspan="1">West Tyrone</td><td colspan="1" rowspan="1">5</td></tr></tbody>
+</table>
+</Tabular>
+</ScheduleBody>
+</Schedule>
+</BlockAmendment>
+</P2para>
+</P2>
+</P1para>
+</P1>
+<P1 DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/article/4/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/article/4" id="article-4">
+<Pnumber>4</Pnumber>
+<P1para>
+<Text>The Chief Electoral Officer for Northern Ireland shall make such re-arrangement or adaptation of the register of parliamentary electors as may be necessary to give effect to this Order.</Text>
+</P1para>
+</P1>
+<SignedSection DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/signature/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/signature">
+<Signatory>
+<Signee>
+<PersonName>N. H. Nicholls</PersonName>
+<JobTitle>Clerk of the Privy Council</JobTitle>
+</Signee>
+</Signatory>
+</SignedSection>
+</Body>
+<Schedules>
+<Schedule DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule" NumberFormat="default" id="schedule">
+<Number>SCHEDULE</Number>
+<TitleBlock>
+<Title>NAMES, DESIGNATION AND COMPOSITION OF CONSTITUENCIES IN NORTHERN IRELAND</Title>
+</TitleBlock>
+<ScheduleBody>
+<Tabular Orientation="portrait">
+<table xmlns="http://www.w3.org/1999/xhtml" cols="2">
+<thead><tr><th colspan="1" rowspan="1"><Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">Name and Designation</Emphasis></th><th colspan="1" rowspan="1"><Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">Composition</Emphasis></th></tr></thead>
+<tbody><tr><td colspan="1" rowspan="1">Belfast East <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(borough constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Belfast, namely, Ballyhackamore, Ballymacarrett, Belmont, Bloomfield, Cherryvalley, Island, Knock, Orangefield, Stormont, Sydenham and The Mount; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Castlereagh, namely, Cregagh, Downshire, Gilnahirk, Hillfoot, Lisnasharragh, Lower Braniel, Tullycarnet, Upper Braniel and Wynchurch.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Belfast North <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(borough constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Belfast, namely, Ardoyne, Ballysillan, Bellevue, Castleview, Cavehill, Chichester Park, Cliftonville, Crumlin, Duncairn, Fortwilliam, Legoniel, New Lodge, Water Works and Woodvale; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Newtownabbey, namely, Abbey, Coole, Dunanney, Valley and Whitehouse.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Belfast South <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(borough constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Belfast, namely, Ballynafeigh, Blackstaff, Botanic, Finaghy, Malone, Musgrave, Ravenhill, Rosetta, Shaftesbury, Stranmillis, Upper Malone, Windsor and Woodstock; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Castlereagh, namely, Beechill, Cairnshill, Galwally, Knockbracken, Minnowburn and Newtownbreda.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Belfast West <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(borough constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Belfast, namely, Andersonstown, Beechmount, Clonard, Falls, Falls Park, Glencairn, Glencolin, Glen Road, Highfield, Ladybrook, Shankill, Upper Springfield and Whiterock; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Lisburn, namely, Collin Glen, Kilwee, Poleglass and Twinbrook.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">East Antrim <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Larne;</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the local government district of Carrickfergus; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/iii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/iii" id="schedule-paragraph-iii">
+<Pnumber>iii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Newtownabbey, namely, Cloughfern, Jordanstown, Monkstown and Rostulla.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">East Londonderry <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Coleraine; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the local government district of Limavady.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Fermanagh and South Tyrone <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Fermanagh; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Dungannon, namely Augher, Aughnacloy, Ballygawley, Ballysaggart, Benburb, Caledon, Castlecaulfield, Clogher, Coolhill, Drumglass, Fivemiletown, Killyman, Killymeal, Moy, Moygashel and Mullaghmore.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Foyle <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1">The local government district of Derry.</td></tr><tr><td colspan="1" rowspan="1">Lagan Valley <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Lisburn, namely Ballinderry, Ballymacbrennan, Ballymacash, Ballymacoss, Blaris, Derryaghy, Dromara, Drumbo, Dunmurry, Glenavy, Harmony Hill, Hilden, Hillhall, Hillsborough, Knockmore, Lagan Valley, Lambeg, Lisnagarvey, Maghaberry, Magheralave, Maze, Moira, Old Warren, Seymour Hill, Tonagh and Wallace Park; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Banbridge, namely, Dromore North, Dromore South, Gransha and Quilly.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Mid Ulster <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Cookstown;</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the local government district of Magherafelt; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/iii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/iii" id="schedule-paragraph-iii">
+<Pnumber>iii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Dungannon, namely, Altmore, Coalisland North, Coalisland South, Coalisland West and Newmills, Donaghmore and Washing Bay.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Newry and Armagh <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Armagh; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Newry and Mourne, namely, Ballybot, Bessbrook, Camlough, Creggan, Crossmaglen, Daisy Hill, Derrymore, Drumgullion, Drumalane, Fathom, Forkhill, Newtownhamilton, Silver Bridge, <Abbreviation Expansion="Saint">St.</Abbreviation> Mary's, St. Patrick's, Tullyhappy and Windsor Hill.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">North Antrim <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Ballymena;</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the local government district of Ballymoney; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/iii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/iii" id="schedule-paragraph-iii">
+<Pnumber>iii</Pnumber>
+<P4para>
+<Text>the local government district of Moyle.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">North Down <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of North Down; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Ards, namely, Donaghadee North, Donaghadee South and Millisle.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">South Antrim <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Antrim; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Newtownabbey, namely, Ballyclare North, Ballyclare South, Ballyduff, Ballyhenry, Ballynure, Ballyrobert, Burnthill, Carnmoney, Collinbridge, Doagh, Glebe, Glengormley, Hawthorne, Hightown, Mallusk and Mossley.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">South Down <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Down, namely, Ardglass, Audley’s Acre, Ballymaglave, Ballymote, Ballynahinch East, Castlewellan, Cathedral, Crossgar, Donard, Drumaness, Dundrum, Dunmore, Killough, Kilmore, Murlough, Quoile, Seaforde, Shimna, Strangford and Tollymore;</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Banbridge, namely, Ballyward, Bannside, Katesbridge and Rathfriland; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/iii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/iii" id="schedule-paragraph-iii">
+<Pnumber>iii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Newry and Mourne, namely, Annalong, Binnian, Burren and Kilbroney, Clonallan, Derryleckagh, Donaghmore, Kilkeel Central, Kilkeel South, Lisnacree, Mayobridge, Rostrevor, Seaview and Spelga.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Strangford <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The following wards of the local government district of Castlereagh, namely, Ballyhanwood, Carrowreagh, Carryduff East, Carryduff West, Dundonald, Enler, Graham’s Bridge and Moneyreagh;</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Down, namely, Derryboy, Killyleagh and Saintfield; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/iii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/iii" id="schedule-paragraph-iii">
+<Pnumber>iii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Ards, namely, Ballygowan, Ballyrainey, Ballywalter, Bradshaw’s Brae, Carrowdore, Central, Comber East, Comber North, Comber West, Glen, Gregstown, Killinchy, Kircubbin, Lisbane, Loughries, Movilla, Portaferry, Portavogie, Scrabo and Whitespots.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">Upper Bann <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Craigavon; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the following wards of the local government district of Banbridge, namely, Ballydown, Banbridge West, Edenderry, Fort, Gilford, Lawrencetown, Loughbrickland, Seapatrick and The Cut.</Text>
+</P4para>
+</P4>
+</td></tr><tr><td colspan="1" rowspan="1">West Tyrone <Emphasis xmlns="http://www.legislation.gov.uk/namespaces/legislation">(county constituency)</Emphasis></td><td colspan="1" rowspan="1"><P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/i/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/i" id="schedule-paragraph-i">
+<Pnumber>i</Pnumber>
+<P4para>
+<Text>The local government district of Omagh; and</Text>
+</P4para>
+</P4>
+<P4 xmlns="http://www.legislation.gov.uk/namespaces/legislation" DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/schedule/paragraph/ii/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/schedule/paragraph/ii" id="schedule-paragraph-ii">
+<Pnumber>ii</Pnumber>
+<P4para>
+<Text>the local government district of Strabane.</Text>
+</P4para>
+</P4>
+</td></tr></tbody>
+</table>
+</Tabular>
+</ScheduleBody>
+</Schedule>
+</Schedules>
+<ExplanatoryNotes DocumentURI="http://www.legislation.gov.uk/uksi/1995/2992/note/made" IdURI="http://www.legislation.gov.uk/id/uksi/1995/2992/note">
+<Comment>
+<Para>
+<Text>(This note is not part of the Order)</Text>
+</Para>
+</Comment>
+<P>
+<Text>This Order gives effect without modification to the recommendations set out in the report and supplementary report of the Boundary Commission for Northern Ireland dated 20th June 1995. The report sets out proposals for parliamentary constituencies in Northern Ireland consequent on a review by the Commission of the representation in the House of Commons of Northern Ireland.</Text>
+</P>
+<P>
+<Text>Article 2 of, and the Schedule to, this Order give effect to those proposals. By virtue of section 4(6) of the Parliamentary Constituencies Act 1986, the coming into force of this Order does not affect any parliamentary election until a proclamation is issued by Her Majesty summoning a new Parliament, or affect the constitution of the House of Commons until the dissolution of the Parliament then in being.</Text>
+</P>
+<P>
+<Text>Article 3 of this Order amends the Northern Ireland Assembly Act 1973 in consequence of giving effect to the recommendations in the supplementary report. Article 3(1) amends section 1(1) of that Act so that any future Northern Ireland Assembly shall consist of 90 members. Article 3(2) amends the Schedule to that Act by setting out the new constituencies and the number of members to be returned for each.</Text>
+</P>
+</ExplanatoryNotes>
+</Secondary><Footnotes><Footnote id="f00001">
+<FootnoteText>
+<Para>
+<Text><Citation URI="http://www.legislation.gov.uk/id/ukpga/1986/56" id="c00001" Class="UnitedKingdomPublicGeneralAct" Year="1986" Number="0056">1986 c. 56</Citation>.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00002">
+<FootnoteText>
+<Para>
+<Text><Citation URI="http://www.legislation.gov.uk/id/ukpga/1973/36" id="c00002" Class="UnitedKingdomPublicGeneralAct" Year="1973" Number="0036">1973 c. 36</Citation>; section 28(2) was amended by paragraph 1(2) of Schedule 3 to the Parliamentary Constituencies Act 1986.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00003">
+<FootnoteText>
+<Para>
+<Text>Section 28(4) was amended by paragraph 1(4) of Schedule 3 to the Parliamentary Constituencies Act 1986.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00004">
+<FootnoteText>
+<Para>
+<Text>Section 28(5) was substituted by paragraph 1(5) of Schedule 3 to the Parliamentary Constituencies Act 1986.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00005">
+<FootnoteText>
+<Para>
+<Text>Section 28(6) was substituted by paragraph 2 of Schedule 3 to the Parliamentary Constituencies Act 1986.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00006">
+<FootnoteText>
+<Para>
+<Text><Citation URI="http://www.legislation.gov.uk/id/ukpga/1973/17" id="c00003" Class="UnitedKingdomPublicGeneralAct" Year="1973" Number="0017">1973 c. 17</Citation>.</Text>
+</Para>
+</FootnoteText>
+</Footnote><Footnote id="f00007">
+<FootnoteText>
+<Para>
+<Text>The Schedule was substituted by article 3(2) of the Parliamentary Constituencies (Northern Ireland) Order 1982 (<Acronym Expansion="Statutory Instrument">S.I.</Acronym> <Citation URI="http://www.legislation.gov.uk/id/uksi/1982/1838" id="c00004" Class="UnitedKingdomStatutoryInstrument" Year="1982" Number="1838">1982/1838</Citation>).</Text>
+</Para>
+</FootnoteText>
+</Footnote></Footnotes></Legislation>

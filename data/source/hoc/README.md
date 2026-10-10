@@ -52,3 +52,9 @@ than candidate names; it must remain labelled as modelled data in the UI.
 The export also includes Parliament's official population, residential and area
 overlap links between the 2010–2019 and 2024 constituency geographies. Those
 links describe territorial overlap and are not used to allocate or predict votes.
+
+## 2001 historical results
+
+The House of Commons Library [CBP-8647 historical dataset](https://commonslibrary.parliament.uk/research-briefings/cbp-8647/) supplies the 2001 worksheet. The build reads the committed normalized input data/source/hoc/historical-2001-results.json. To regenerate it, place the inspected workbook mirror at data/source/hoc/1918-2019election_results_by_pcon.xlsx and run python scripts/export-2001-results.py.
+
+The local workbook mirror has SHA-256 137eb21778b1acfd0c73ed0ae40e3fae1c9288a396a5cbc5d29b3ebe4120d7b4 and has not been byte-compared with the official download. The 2001 worksheet has 659 rows and party-group votes, not named candidate returns; it does not supply second-place votes, winning margins or invalid-ballot totals. The normalized input records the “Other” group and the two source-note exceptions. See docs/historical-source-inventory.md for source and boundary limits.

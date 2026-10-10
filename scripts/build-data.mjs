@@ -38,6 +38,7 @@ import {
   loadLookup, loadDemographics, DEMOGRAPHIC_METRICS,
 } from './lib/census.mjs';
 import { writeElectionData } from './lib/elections.mjs';
+import { validateGeneratedData } from './validate-data.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -54,9 +55,9 @@ const HOC_DIR = join(ROOT, 'data', 'source', 'hoc');
 const HOC_CONSTITUENCY = join(HOC_DIR, 'constituency.csv');
 const HOC_CANDIDATE = join(HOC_DIR, 'candidate.csv');
 
-// ONS Census 2021, aggregated from MSOA to the 2024 constituency boundaries.
-// England and Wales only: 575 of the 650 seats carry demographics; the 57
-// Scottish and 18 Northern Irish seats do not.
+// Official census tables use country-specific published 2024 seat allocation:
+// ONS MSOA21 -> PCON24 in England/Wales, NRS OA22 -> UKPC24 in Scotland, and
+// NISRA's direct PCON24 table outputs in Northern Ireland.
 const CENSUS_DIR = join(ROOT, 'data', 'source', 'census');
 const CENSUS_LOOKUP = join(CENSUS_DIR, 'msoa-to-pcon.csv');
 
@@ -242,12 +243,22 @@ function main() {
   // ------------------------------------------------------- census 2021
   // Census tables publish at MSOA level, so they are aggregated up through the
   // ONS best-fit MSOA -> constituency lookup.
-  const censusLookup = loadLookup(CENSUS_LOOKUP);
-  const demographics = loadDemographics(CENSUS_DIR, censusLookup);
-  if (demographics.size !== 575) {
-    throw new Error(`Expected Census coverage for 575 England and Wales seats; found ${demographics.size}`);
+  const countrySeatCodes = Object.fromEntries(['England', 'Wales', 'Scotland', 'Northern Ireland'].map((country) => [
+    country,
+    new Set(raw.features.filter((f) => f.properties.Country === country).map((f) => f.properties.GSScode)),
+  ]));
+  const expectedSeatCodes = new Set(raw.features.map((f) => f.properties.GSScode));
+  const englandWalesCodes = new Set([...countrySeatCodes.England, ...countrySeatCodes.Wales]);
+  const censusLookup = loadLookup(CENSUS_LOOKUP, englandWalesCodes);
+  const demographics = loadDemographics(CENSUS_DIR, censusLookup, {
+    seatCodes: expectedSeatCodes,
+    scotlandCodes: countrySeatCodes.Scotland,
+    northernIrelandCodes: countrySeatCodes['Northern Ireland'],
+  });
+  if (demographics.size !== 650) {
+    throw new Error(`Expected Census coverage for all 650 seats; found ${demographics.size}`);
   }
-  console.log(`  census        ${demographics.size} England & Wales seats (57 Scottish and 18 Northern Irish seats have no census)`);
+  console.log(`  census        ${demographics.size} seats (England 543, Wales 32, Scotland 57, Northern Ireland 18)`);
 
   const byKey = new Map(mps.map((m) => [m.key, m]));
   const unmatched = [];
@@ -330,10 +341,19 @@ function main() {
       winnerShare,
       votes: votes ?? undefined,
       declarationTime: hoc?.declarationTime ?? null,
-      // --- Census 2021, England & Wales only ---
+      // Country-specific census years and best-fit/direct allocation are
+      // carried per seat because this is a multi-census UK view.
       census: demographics.get(p.GSScode)
         ? {
           population: demographics.get(p.GSScode).population,
+          age65Plus: demographics.get(p.GSScode).age65Plus,
+          ownerOccupiedShare: demographics.get(p.GSScode).ownerOccupiedShare,
+          censusYear: demographics.get(p.GSScode).censusYear ?? 2021,
+          censusSource: demographics.get(p.GSScode).censusSource ?? 'ONS Census 2021',
+          censusSourceId: demographics.get(p.GSScode).censusSourceId ?? 'ons-census-2021',
+          censusMethod: demographics.get(p.GSScode).censusMethod ?? 'ONS best-fit MSOA21 to July 2024 PCON24; the published ArcGIS layer aliases its physical PCON25 fields as PCON24',
+          niLevel4PlusShare: demographics.get(p.GSScode).niLevel4PlusShare,
+          scotlandDegreeShare: demographics.get(p.GSScode).scotlandDegreeShare,
           deprived: demographics.get(p.GSScode).TS011,
           deprivationIndex: demographics.get(p.GSScode).deprivationIndex,
           minority: demographics.get(p.GSScode).TS021,
@@ -389,6 +409,11 @@ function main() {
         turnout: record.turnout,
         // Denormalised onto the feature so the map can shade by a census metric
         // without a second lookup per feature.
+        population: record.census?.population ?? null,
+        age65Plus: record.census?.age65Plus ?? null,
+        ownerOccupiedShare: record.census?.ownerOccupiedShare ?? null,
+        niLevel4PlusShare: record.census?.niLevel4PlusShare ?? null,
+        scotlandDegreeShare: record.census?.scotlandDegreeShare ?? null,
         deprived: record.census?.deprived ?? null,
         minority: record.census?.minority ?? null,
         degree: record.census?.degree ?? null,
@@ -539,35 +564,77 @@ function main() {
   }));
 
   // Census metrics, described once so the UI does not hardcode labels.
-  const censusMetrics = DEMOGRAPHIC_METRICS.map((m) => {
+  const censusMetrics = DEMOGRAPHIC_METRICS.map((baseMetric) => {
+    const m = {
+      ...baseMetric,
+      definition: baseMetric.definition ?? baseMetric.hint,
+      sourceIds: baseMetric.sourceIds ?? Object.fromEntries((baseMetric.countries ?? []).map((country) => [
+        country,
+        country === 'Scotland' ? 'nrs-census-2022' : country === 'Northern Ireland' ? 'nisra-census-2021' : 'ons-census-2021',
+      ])),
+      yearByCountry: baseMetric.yearByCountry ?? Object.fromEntries((baseMetric.countries ?? []).map((country) => [country, country === 'Scotland' ? 2022 : 2021])),
+    };
     // The metric's `key` is its ONS table id; `seatKey` is the field it is
     // stored under on each seat record.
     const values = seatRecords
       .map((s) => s.census?.[m.seatKey])
       .filter(Number.isFinite)
       .sort((a, b) => a - b);
+    const coverageByCountry = Object.fromEntries(
+      ['England', 'Wales', 'Scotland', 'Northern Ireland'].map((country) => [
+        country,
+        seatRecords.filter((s) => s.country === country && Number.isFinite(s.census?.[m.seatKey])).length,
+      ]),
+    );
     const q = (p) => values[Math.floor(values.length * p)];
     return {
       ...m,
       seats: values.length,
+      coverageByCountry,
       min: values[0],
       p10: q(0.1),
       median: q(0.5),
       p90: q(0.9),
       max: values[values.length - 1],
-      // Observed range across E&W, used to sanity-check the hand-set domain.
+      // Observed range across seats with data, used to sanity-check the hand-set domain.
       observed: [values[0], values[values.length - 1]],
     };
   });
 
   const summary = {
+    schemaVersion: 1,
     total: seatRecords.length,
     generated: '2024 general election, 4 July',
     source: 'House of Commons Library, CBP-10009',
     census: {
-      source: 'ONS Census 2021',
-      note: 'England and Wales only: 575 seats are covered. The 57 Scottish and 18 Northern Irish seats have no census.',
+      source: 'ONS Census 2021, NRS Census 2022, and NISRA Census 2021',
+      note: 'Population, age 65+, and owner-occupied housing are available for all 650 seats. Census years differ: 2021 in England, Wales and Northern Ireland; 2022 in Scotland. Education is split by country because qualification categories differ. Other legacy measures are England and Wales only.',
       seats: seatRecords.filter((s) => s.census).length,
+      countryCoverage: Object.fromEntries(
+        ['England', 'Wales', 'Scotland', 'Northern Ireland'].map((country) => [
+          country,
+          seatRecords.filter((s) => s.country === country && s.census).length,
+        ]),
+      ),
+      allocationByCountry: {
+        'England and Wales': {
+          method: 'ONS published best-fit assignment from each MSOA21 to July 2024 PCON24.',
+          sourceUrl: 'https://www.data.gov.uk/dataset/f004674d-d0db-467b-9bd7-009b9d1e2fc6/msoa-2021-to-westminster-parliamentary-constituency-july-2024-best-fit-lookup-in-ew',
+          physicalFields: ['PCON25CD', 'PCON25NM', 'PCON25NMW'],
+          publishedAliases: ['PCON24CD', 'PCON24NM', 'PCON24NMW'],
+          exactSeatCodeCoverage: 575,
+          lookupSha256: '0FC29D5E7A1C29CD947FD889BFE8EBF3DE0501FD048187DA79855B30C65B5A44',
+          license: 'Open Government Licence v3.0',
+        },
+        Scotland: { method: 'NRS published OA22 to UK Parliamentary Constituency 2024 lookup; output-area counts summed by constituency code.' },
+        'Northern Ireland': { method: 'NISRA PCON24 direct table outputs; published geography uses Census 2021 Data Zone aggregation.' },
+      },
+      countrySources: {
+        England: { sourceId: 'ons-census-2021', year: 2021, source: 'ONS / Nomis Census 2021 bulk tables', sourceUrl: 'https://www.nomisweb.co.uk/census/2021/bulk', allocation: 'MSOA21 to July 2024 PCON24 best-fit', allocationUrl: 'https://www.data.gov.uk/dataset/f004674d-d0db-467b-9bd7-009b9d1e2fc6/msoa-2021-to-westminster-parliamentary-constituency-july-2024-best-fit-lookup-in-ew', license: 'Open Government Licence v3.0', status: 'included' },
+        Wales: { sourceId: 'ons-census-2021', year: 2021, source: 'ONS / Nomis Census 2021 bulk tables', sourceUrl: 'https://www.nomisweb.co.uk/census/2021/bulk', allocation: 'MSOA21 to July 2024 PCON24 best-fit', allocationUrl: 'https://www.data.gov.uk/dataset/f004674d-d0db-467b-9bd7-009b9d1e2fc6/msoa-2021-to-westminster-parliamentary-constituency-july-2024-best-fit-lookup-in-ew', license: 'Open Government Licence v3.0', status: 'included' },
+        Scotland: { sourceId: 'nrs-census-2022', year: 2022, source: 'National Records of Scotland Census 2022 OA topic tables', sourceUrl: 'https://www.scotlandscensus.gov.uk/documents/2022-output-area-data/', allocation: 'OA22_UKPC24 published lookup', allocationUrl: 'https://nrscotland.gov.uk/publications/2022-census-geography-products/', license: 'Open Government Licence v3.0', status: 'included' },
+        'Northern Ireland': { sourceId: 'nisra-census-2021', year: 2021, source: 'Northern Ireland Statistics and Research Agency Census 2021 PCON24 tables', sourceUrl: 'https://build.nisra.gov.uk/en/custom/data?d=PEOPLE&v=PARLCON24&v=AGE_BAND_AGG11', allocation: 'published PCON24 tables from DZ2021 aggregation', allocationUrl: 'https://build.nisra.gov.uk/en/metadata/variable?d=HOUSEHOLD&v=PARLCON24', license: 'Open Government Licence v3.0', status: 'included' },
+      },
       metrics: censusMetrics,
     },
     totals: {
@@ -630,7 +697,13 @@ function main() {
   console.log(`  elections    ${electionData.descriptors.map((e) => e.label).join(', ')}`);
   console.log(`  boundary links ${electionData.crosswalk.length} official population-overlap rows`);
   for (const m of censusMetrics) {
-    console.log(`                ${m.label.padEnd(24)} p10 ${(m.p10 * 100).toFixed(1)}%  median ${(m.median * 100).toFixed(1)}%  p90 ${(m.p90 * 100).toFixed(1)}%  [domain ${m.domain.map((d) => `${d * 100}%`).join('-')}]`);
+    const fmt = (value) => m.unit === 'people'
+      ? Math.round(value).toLocaleString()
+      : `${(value * 100).toFixed(1)}%`;
+    const domain = m.unit === 'people'
+      ? m.domain.map((value) => Math.round(value).toLocaleString()).join('-')
+      : m.domain.map((value) => `${value * 100}%`).join('-');
+    console.log(`                ${m.label.padEnd(42)} p10 ${fmt(m.p10)}  median ${fmt(m.median)}  p90 ${fmt(m.p90)}  [domain ${domain}]`);
   }
   console.log('');
 
@@ -697,21 +770,30 @@ function main() {
     throw new Error(`${badArithmetic} seat(s) have inconsistent vote arithmetic`);
   }
 
-  // Census: the E&W total should reproduce the published population. ONS's
-  // published figure is 59,597,542 usual residents; individual tables drift by
-  // a few dozen people because of statistical disclosure control, so allow a
-  // small tolerance rather than demanding an exact match.
+  // Census coverage is checked by measure: core measures cover all countries,
+  // country-specific education covers only its published definition, and
+  // legacy ONS measures remain limited to England and Wales.
   const censusSeats = seatRecords.filter((s) => s.census);
-  const CENSUS_EXPECTED = 575;   // England (543) + Wales (32)
-
-  if (censusSeats.length !== CENSUS_EXPECTED) {
-    console.warn(`  ! census covers ${censusSeats.length} seats, expected ${CENSUS_EXPECTED}`);
+  const expectedCountrySeats = { England: 543, Wales: 32, Scotland: 57, 'Northern Ireland': 18 };
+  if (censusSeats.length !== 650) {
+    throw new Error(`Census seat metadata covers ${censusSeats.length} seats, expected 650`);
   }
-  const coveredCountries = new Set(censusSeats.map((s) => s.country));
-  for (const c of coveredCountries) {
-    if (c !== 'England' && c !== 'Wales') {
-      throw new Error(`Census data applied to a ${c} seat, which the census does not cover`);
+  for (const [country, expected] of Object.entries(expectedCountrySeats)) {
+    const actual = censusSeats.filter((s) => s.country === country).length;
+    if (actual !== expected) throw new Error(`Census metadata covers ${actual} ${country} seats, expected ${expected}`);
+  }
+  for (const metric of censusMetrics) {
+    const expected = Object.fromEntries(Object.entries(expectedCountrySeats).map(([country, seats]) => [
+      country,
+      metric.countries?.includes(country) ? seats : 0,
+    ]));
+    for (const [country, count] of Object.entries(expected)) {
+      if (metric.coverageByCountry[country] !== count) {
+        throw new Error(`${metric.key} covers ${metric.coverageByCountry[country]} ${country} seats; expected ${count}`);
+      }
     }
+    const expectedTotal = Object.values(expected).reduce((total, count) => total + count, 0);
+    if (metric.seats !== expectedTotal) throw new Error(`${metric.key} covers ${metric.seats} seats; expected ${expectedTotal}`);
   }
   if (censusMetrics.some((m) => !Number.isFinite(m.median))) {
     throw new Error('A census metric has no median: check that table columns resolved');
@@ -724,6 +806,8 @@ function main() {
   }
 
   console.log('  checks        650 seats, published totals and seat counts all match\n');
+  const contract = validateGeneratedData(OUT_DIR);
+  console.log('  data contract ' + contract.elections + ' elections, ' + contract.boundarySets + ' boundary sets, and ' + contract.crosswalkLinks + ' links across ' + contract.crosswalks + ' crosswalks passed\n');
 }
 
 main();

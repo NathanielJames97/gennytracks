@@ -6,7 +6,15 @@ import { num, pct } from '../lib/analysis';
  * National overview: headline totals, seats against votes, and the seat flows
  * that explain where Labour's majority came from.
  */
-export default function Overview({ summary, election, onSelectParty, activeParty }) {
+export default function Overview({
+  summary,
+  election,
+  onSelectParty,
+  activeParty,
+  activeRegion,
+  onSelectRegion,
+  onClearRegion,
+}) {
   if (!summary) return null;
   const { totals, parties, voteShare, swings, regions, majorityBands, memberStats } = summary;
 
@@ -53,20 +61,19 @@ export default function Overview({ summary, election, onSelectParty, activeParty
           <span className="tile-label">turnout</span>
         </div>
         <div className="tile">
-          <span className="tile-value">{num(totals.candidates)}</span>
-          <span className="tile-label">candidates</span>
+          <span className="tile-value">{election?.candidateDataGranularity === 'candidate' ? num(totals.candidates) : '—'}</span>
+          <span className="tile-label">{election?.candidateDataGranularity === 'candidate' ? 'candidates' : 'candidate names unavailable'}</span>
         </div>
-        <div className="tile">
-          <span className="tile-value">{num(memberStats.reelected)}</span>
-          <span className="tile-label">re-elected</span>
-        </div>
+        {memberStats && (
+          <div className="tile">
+            <span className="tile-value">{num(memberStats.reelected)}</span>
+            <span className="tile-label">re-elected</span>
+          </div>
+        )}
       </div>
 
-      {election?.isNotional && (
-        <p className="boundary-warning">
-          {election.caveat}
-        </p>
-      )}
+      {election?.caveat && <p className="boundary-warning">{election.caveat}</p>}
+      {election?.boundaryCaveat && <p className="note">{election.boundaryCaveat}</p>}
 
       <h3 className="sub">Seats won</h3>
       <BarChart
@@ -99,14 +106,30 @@ export default function Overview({ summary, election, onSelectParty, activeParty
         rows={regionRows}
         ariaLabel="Seats by region"
         formatValue={(v) => num(v)}
+        selected={activeRegion}
+        onSelect={onSelectRegion}
       />
+      {activeRegion && onClearRegion && (
+        <p className="note" role="status">
+          Showing seats in {activeRegion}.{' '}
+          <button type="button" className="secondary-action" onClick={onClearRegion}>
+            Clear region filter
+          </button>
+        </p>
+      )}
 
-      <h3 className="sub">How close were the races?</h3>
-      <Histogram bands={majorityBands} ariaLabel="Distribution of winning margins" />
-      <p className="note">
-        {majorityBands[0].seats + majorityBands[1].seats} seats were won by fewer than
-        2,000 votes.
-      </p>
+      {election?.marginDataAvailable === false ? (
+        <p className="note">Winning margins are unavailable in this source.</p>
+      ) : (
+        <>
+          <h3 className="sub">How close were the races?</h3>
+          <Histogram bands={majorityBands} ariaLabel="Distribution of winning margins" />
+          <p className="note">
+            {majorityBands[0].seats + majorityBands[1].seats} seats were won by fewer than
+            2,000 votes.
+          </p>
+        </>
+      )}
     </div>
   );
 }

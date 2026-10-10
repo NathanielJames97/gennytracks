@@ -7,21 +7,28 @@ import SeatPanel from './components/SeatPanel';
 import Overview from './components/Overview';
 import Correlate from './components/Correlate';
 import { CensusOverview } from './components/CensusPanel';
-import { useDataFile, useDataset } from './hooks/useData';
+import { resultRows, useDataFile, useDataFiles, useDataset } from './hooks/useData';
 import { MAP_MODES, colourFor, BANDS, NO_DATA, HELD, pct } from './lib/analysis';
-import { simulateUniformSwing } from './lib/scenario';
 import { readShareState, writeShareState, downloadCsv } from './lib/share';
 import HistoryPanel from './components/HistoryPanel';
 import ComparePanel from './components/ComparePanel';
+import ComparisonMaps from './components/ComparisonMaps';
+import { UK_IRELAND_BOUNDS } from './lib/map-bounds';
 import ScenarioLab from './components/ScenarioLab';
+import PollingPanel from './components/PollingPanel';
+import BacktestPanel from './components/BacktestPanel';
+import { calculateBaselineShares, PARTY_SCENARIO_METHOD, simulatePartyShareScenario, isCompleteShareVector } from './lib/multi-party-scenario';
+import { canonicalPartyName } from './lib/parties.mjs';
+import { buildComparison, filterComparisonPairs, DEFAULT_COMPARISON_FILTERS, COMPARISON_SORTS, comparisonAreas, downloadComparisonCsv } from './lib/comparison';
+import { filterComparisonChoices, resolveComparisonChoice } from './lib/comparison-compatibility';
 import './App.css';
 
-const HOME_BOUNDS = [[49.7, -9.2], [61.2, 2.2]];
 
-/** Fit the map to the UK once, rather than defaulting to [0,0] in the Atlantic. */
+
+/** Fit the map to the UK and Ireland, rather than defaulting to [0,0] in the Atlantic. */
 function FitBounds({ electionId }) {
   const map = useMap();
-  useEffect(() => { map.fitBounds(HOME_BOUNDS); }, [map, electionId]);
+  useEffect(() => { map.fitBounds(UK_IRELAND_BOUNDS); }, [map, electionId]);
   return null;
 }
 
@@ -65,6 +72,15 @@ function pickMetric(props, mode) {
   }
 }
 
+function censusCoverageLabel(metric, summary) {
+  const countryCoverage = summary?.census?.countryCoverage;
+  if (!countryCoverage || !Object.keys(countryCoverage).length) return 'Coverage varies by country.';
+  const parts = Object.entries(countryCoverage).map(([country, seats]) => (
+    `${country}: ${metric.coverageByCountry?.[country] || 0}/${seats} seats`
+  ));
+  return `Coverage — ${parts.join(' · ')}.`;
+}
+
 /**
  * Swing mode is categorical: each colour is a party that lost seats, so the
  * legend lists them with counts rather than showing a value ramp.
@@ -96,7 +112,10 @@ function SwingLegend({ summary }) {
   );
 }
 
-function ModeLegend({ mode, summary }) {
+function ModeLegend({ mode, summary, election }) {
+  if (mode === 'majority' && election?.marginDataAvailable === false) return <p className="legend-note">Winning margins are not available for this source.</p>;
+  if (mode === 'winner' && election?.candidateDataGranularity === 'party-aggregate') return <p className="legend-note">Colour shows the leading reported party group; smaller parties are grouped together.</p>;
+  if (mode === 'swing' && election?.candidateDataGranularity === 'party-aggregate' && !summary?.isNotional) return <p className="legend-note">Seat gains are not included in this party-group source.</p>;
   if (mode === 'winner') {
     return <p className="legend-note">Shaded by the party that won the seat.</p>;
   }
@@ -108,7 +127,7 @@ function ModeLegend({ mode, summary }) {
     if (!metric) return null;
     return (
       <div>
-        <p className="legend-note">{metric.hint}. England and Wales only.</p>
+        <p className="legend-note">{metric.hint}. {censusCoverageLabel(metric, summary)}</p>
         <ul className="legend">
           {metric.domain.map((d, i) => {
             const lo = metric.domain[0] + ((metric.domain[1] - metric.domain[0]) * i) / 4;
@@ -164,31 +183,152 @@ export default function App() {
   const { manifest, election, electionId, seats, summary, boundaries, status, error } = useDataset(requestedElectionId);
   const [mode, setMode] = useState(routeState.mode || 'winner');
   const [partyFilter, setPartyFilter] = useState(routeState.party || null);
+  const [regionFilter, setRegionFilter] = useState(routeState.region || null);
   const [selectedId, setSelectedId] = useState(routeState.seat || null);
   const [query, setQuery] = useState(routeState.q || '');
   const [tab, setTab] = useState([
-    'overview', 'census', 'correlate', 'seat', 'history', 'compare', 'scenario', 'list',
+    'overview', 'census', 'correlate', 'seat', 'history', 'compare', 'scenario', 'polling', 'backtest', 'list',
   ].includes(routeState.view) ? routeState.view : 'overview');
   const [compareId, setCompareId] = useState(routeState.compare || '2019-notional-2024');
-  const [scenario, setScenario] = useState({
-    party: routeState.swingParty || 'Labour',
-    swing: Math.max(-15, Math.min(15, Number(routeState.swing) || 0)),
+  const [compatibleComparisonsOnly, setCompatibleComparisonsOnly] = useState(routeState.compareCompatible === '1');
+  const [comparisonFilters, setComparisonFilters] = useState({
+    ...DEFAULT_COMPARISON_FILTERS, area: routeState.compareArea || '',
+    changesOnly: routeState.compareChanges !== '0', query: routeState.compareQuery || '',
+    sort: COMPARISON_SORTS[routeState.compareSort] ? routeState.compareSort : 'name',
   });
+  const [scenario, setScenario] = useState(() => routeState.scenario || {
+    method: 'uniform-party-delta-v1',
+    geography: 'GB',
+    requestedShares: null,
+    source: { kind: 'manual', id: 'manual', label: 'Manual scenario' },
+    assumptions: [
+      'National share changes are applied as equal percentage-point deltas wherever each party stood.',
+      'Local shares are clipped at zero and rescaled across declared candidates; no candidate entrants, tactical shifts, turnout changes or local evidence are modelled.',
+      'Northern Ireland is held at baseline and excluded from this GB scenario.',
+    ],
+    ...((routeState.swing !== undefined || routeState.swingParty) ? {
+      party: routeState.swingParty || 'Labour',
+      swing: Math.max(-15, Math.min(15, Number(routeState.swing) || 0)),
+    } : {}),
+  });
+  const legacyScenarioConverted = useRef(Boolean(routeState.scenario?.requestedShares));
   const [projection, setProjection] = useState(routeState.projection === '1');
+  const regionFilterRef = useRef(regionFilter);
+  const partyFilterRef = useRef(partyFilter);
+  const queryRef = useRef(query);
+  const projectionAvailableRef = useRef(false);
+  const seatsByIdRef = useRef(new Map());
+  const scenarioSeatsByIdRef = useRef(new Map());
+  regionFilterRef.current = regionFilter;
+  partyFilterRef.current = partyFilter;
+  queryRef.current = query;
   const [shareStatus, setShareStatus] = useState('');
+  const scenarioDescriptor = manifest?.elections?.find((item) => item.id === '2024') || null;
+  const scenarioFile = useDataFile((['scenario', 'polling'].includes(tab) && electionId !== '2024') ? scenarioDescriptor?.resultsFile : null);
+  const scenarioBaseSeats = electionId === '2024' ? seats : resultRows(scenarioFile.data);
+  const scenarioBaselineSet = useMemo(() => {
+    const seatsForScenario = scenarioBaseSeats || [];
+    const byGeography = Object.fromEntries(['GB', 'UK', 'NI'].map((geography) => [
+      geography, calculateBaselineShares(seatsForScenario, { geography }),
+    ]));
+    const regional = Object.fromEntries(['England', 'Scotland', 'Wales'].map((region) => {
+      const result = calculateBaselineShares(seatsForScenario, { geography: 'GB', region });
+      return [region, {
+        ...result,
+        shares: Object.fromEntries(Object.keys(byGeography.GB.shares).map((party) => [party, result.shares[party] || 0])),
+      }];
+    }));
+    return { byGeography, regional };
+  }, [scenarioBaseSeats]);
+  const scenarioGeography = scenario.geography || 'GB';
+  const scenarioBaseline = scenarioBaselineSet.byGeography[scenarioGeography] || scenarioBaselineSet.byGeography.GB;
+  const pollsFile = useDataFile(['polling', 'backtest'].includes(tab) ? 'polls.json' : null);
+  const backtestIds = ['2010', '2015', '2017', '2019', '2019-notional-2024', '2024'];
+  const backtestRequests = tab === 'backtest' ? backtestIds.map((id) => {
+    const item = manifest?.elections?.find((row) => row.id === id);
+    return item ? { id, path: item.resultsFile } : null;
+  }).filter(Boolean) : [];
+  const backtestFiles = useDataFiles(backtestRequests);
+  const scenarioShares = scenario.requestedShares || scenarioBaseline.shares;
+  const scenarioComplete = isCompleteShareVector(scenarioShares, Object.keys(scenarioBaseline.shares));
+  const scenarioProjection = useMemo(() => {
+    try {
+      return {
+        seats: simulatePartyShareScenario(scenarioBaseSeats || [], {
+          requestedShares: scenarioShares,
+          baselineShares: scenarioBaseline,
+          geography: scenarioGeography,
+          regionalShares: scenario.regionalShares || {},
+          regionalBaselineShares: scenarioBaselineSet.regional,
+          method: scenario.method || PARTY_SCENARIO_METHOD,
+        }),
+        error: '',
+      };
+    } catch (error) {
+      return { seats: [], error: error.message || 'The selected allocation method could not fit these inputs.' };
+    }
+  }, [scenarioBaseSeats, scenarioShares, scenarioBaseline, scenarioGeography, scenario.regionalShares, scenario.method, scenarioBaselineSet.regional]);
+  const scenarioSeats = scenarioProjection.seats;
+  const scenarioError = scenarioProjection.error;
+  const projectionAvailable = projection && !scenarioError;
 
-  const historyFiles = [
-    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2010' ? 'elections/2010.json' : null),
-    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2015' ? 'elections/2015.json' : null),
-    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2017' ? 'elections/2017.json' : null),
-    useDataFile(tab === 'history' && election?.boundarySetId === '2010' && electionId !== '2019' ? 'elections/2019.json' : null),
-    useDataFile(tab === 'history' && election?.boundarySetId === '2024' && electionId !== '2019-notional-2024' ? 'elections/2019-notional-2024.json' : null),
-    useDataFile(tab === 'history' && election?.boundarySetId === '2024' && electionId !== '2024' ? 'elections/2024.json' : null),
-  ];
+  useEffect(() => {
+    if (legacyScenarioConverted.current || !Object.keys(scenarioBaseline.shares || {}).length) return;
+    legacyScenarioConverted.current = true;
+    if (routeState.scenario || !Number(scenario.swing) || !scenario.party) return;
+    const party = canonicalPartyName(scenario.party);
+    const baselineShare = Number(scenarioBaseline.shares[party]);
+    if (!Number.isFinite(baselineShare)) return;
+    const targetShare = Math.max(0, Math.min(100, baselineShare + Number(scenario.swing)));
+    const otherTotal = 100 - baselineShare;
+    const remaining = 100 - targetShare;
+    const requestedShares = Object.fromEntries(Object.entries(scenarioBaseline.shares).map(([name, value]) => [
+      name, name === party ? targetShare : otherTotal > 0 ? value * remaining / otherTotal : value,
+    ]));
+    setScenario({
+      method: 'uniform-party-delta-v1', geography: 'GB', requestedShares,
+      source: { kind: 'legacy-link', id: 'uniform-swing', label: 'Converted legacy swing link' },
+      assumptions: ['Legacy one-party swing link converted to a complete national share vector; other parties are rescaled proportionally.'],
+    });
+  }, [scenarioBaseline, routeState.scenario, scenario.swing, scenario.party]);
+
+  const historyRequests = tab === 'history'
+    ? (manifest?.elections || [])
+      .filter((item) => item.boundarySetId === election?.boundarySetId && item.id !== electionId)
+      .map((item) => ({ id: item.id, path: item.resultsFile }))
+    : [];
+  const historyFiles = useDataFiles(historyRequests);
+  const crosswalkCatalog = manifest?.crosswalks || (manifest?.boundaryCrosswalkFile ? [{
+    id: 'legacy-boundary-crosswalk', file: manifest.boundaryCrosswalkFile,
+  }] : []);
+  const historyCrosswalkDescriptors = tab === 'history'
+    ? crosswalkCatalog.filter((item) => (
+      (!item.fromBoundarySetId && !item.toBoundarySetId)
+      || item.fromBoundarySetId === election?.boundarySetId
+      || item.toBoundarySetId === election?.boundarySetId
+    ))
+    : [];
+  const historyCrosswalkFiles = useDataFiles(historyCrosswalkDescriptors.map(({ id, file }) => ({ id, path: file })));
   const comparisonDescriptor = manifest?.elections?.find((item) => item.id === compareId) || null;
   const comparisonSeatsFile = useDataFile(tab === 'compare' ? comparisonDescriptor?.resultsFile : null);
-  const comparisonSummaryFile = useDataFile(tab === 'compare' ? comparisonDescriptor?.summaryFile : null);
-  const crosswalkFile = useDataFile(tab === 'history' ? manifest?.boundaryCrosswalkFile : null);
+  const comparisonBoundariesFile = useDataFile(
+    tab === 'compare' && comparisonDescriptor?.boundarySetId !== election?.boundarySetId
+      ? comparisonDescriptor?.boundariesFile : null,
+  );
+  const comparisonBoundaries = comparisonDescriptor?.boundarySetId === election?.boundarySetId
+    ? boundaries : comparisonBoundariesFile.data;
+
+  const comparisonSeats = resultRows(comparisonSeatsFile.data);
+  const comparisonModel = useMemo(() => buildComparison(seats, comparisonSeats, election, comparisonDescriptor, comparisonFilters.area),
+    [seats, comparisonSeats, election, comparisonDescriptor, comparisonFilters.area]);
+  const comparisonPairs = useMemo(() => filterComparisonPairs(comparisonModel.pairs, comparisonFilters), [comparisonModel, comparisonFilters]);
+  const comparisonVisibleIds = useMemo(() => new Set(comparisonPairs.map((pair) => pair.current.id)), [comparisonPairs]);
+  const comparisonError = comparisonSeatsFile.error || comparisonBoundariesFile.error;
+  useEffect(() => {
+    if (comparisonSeats && comparisonFilters.area && !comparisonAreas(seats, comparisonSeats).includes(comparisonFilters.area)) {
+      setComparisonFilters((value) => ({ ...value, area: '' }));
+    }
+  }, [seats, comparisonSeats, comparisonFilters.area]);
 
   const setSelected = useCallback((seat) => setSelectedId(seat?.id || null), []);
 
@@ -201,7 +341,7 @@ export default function App() {
     ...(summary?.census?.metrics ?? []).map((m) => ({
       id: `census:${m.seatKey}`,
       label: m.label,
-      hint: `${m.hint}. England and Wales only.`,
+      hint: `${m.hint}. ${censusCoverageLabel(m, summary)}`,
       metric: m,
     })),
   ], [summary]);
@@ -226,6 +366,7 @@ export default function App() {
   }, [seats]);
 
   const selectedRecord = selectedId ? seatsById.get(selectedId) : null;
+  seatsByIdRef.current = seatsById;
 
   // Per-seat display centre, so selecting a seat from the list can fly the map
   // to it. Computed from the boundary geometry, which is already simplified.
@@ -248,40 +389,36 @@ export default function App() {
     selectedRecord ? { ...selectedRecord, centre: centres.get(selectedRecord.id) } : null
   ), [selectedRecord, centres]);
 
-  const scenarioSeats = useMemo(
-    () => simulateUniformSwing(seats, scenario.party, scenario.swing),
-    [seats, scenario.party, scenario.swing],
-  );
   const scenarioSeatsById = useMemo(() => new Map((scenarioSeats || []).map((seat) => [seat.id, seat])), [scenarioSeats]);
+  scenarioSeatsByIdRef.current = scenarioSeatsById;
+  projectionAvailableRef.current = projectionAvailable;
 
   useEffect(() => {
     if (electionId && electionId !== requestedElectionId) setRequestedElectionId(electionId);
     if (status !== 'ready') return;
     if (selectedId && !seatsById.has(selectedId)) setSelectedId(null);
     if (partyFilter && !summary?.parties?.some((party) => party.party === partyFilter)) setPartyFilter(null);
+    if (regionFilter && !summary?.regions?.some((region) => region.region === regionFilter)) setRegionFilter(null);
     const supportedMode = MAP_MODES.some((item) => item.id === mode)
       || summary?.census?.metrics?.some((metric) => `census:${metric.seatKey}` === mode);
     if (!supportedMode) setMode('winner');
     if (['census', 'correlate'].includes(tab) && !summary?.census?.metrics?.length) setTab('overview');
-    if (compareId && (compareId === electionId || !manifest?.elections?.some((item) => item.id === compareId))) {
-      const fallback = manifest?.elections?.find((item) => item.id !== electionId && item.id === '2019-notional-2024')
-        || manifest?.elections?.find((item) => item.id !== electionId);
-      setCompareId(fallback?.id || '');
-    }
-    if (scenario.party && !summary?.parties?.some((party) => party.party === scenario.party)) {
-      setScenario((value) => ({ ...value, party: summary?.parties?.[0]?.party || 'Labour' }));
-    }
-  }, [electionId, requestedElectionId, status, selectedId, seatsById, partyFilter, summary, mode, scenario.party, tab, compareId, manifest]);
+    const nextComparison = resolveComparisonChoice(manifest?.elections || [], election, compareId, compatibleComparisonsOnly);
+    if (compareId !== nextComparison) setCompareId(nextComparison);
+  }, [electionId, requestedElectionId, status, selectedId, seatsById, partyFilter, regionFilter, summary, mode, tab, compareId, manifest, election, compatibleComparisonsOnly]);
 
   useEffect(() => {
     writeShareState({
       election: electionId || requestedElectionId, mode, party: partyFilter, seat: selectedId,
+      region: regionFilter,
       view: tab, compare: tab === 'compare' ? compareId : null, query,
+      compareCompatible: compatibleComparisonsOnly,
       swingParty: tab === 'scenario' || projection ? scenario.party : null,
       swing: tab === 'scenario' || projection ? scenario.swing : null,
-      projection,
+      scenario: tab === 'scenario' || projection ? scenario : null,
+      projection: projectionAvailable, comparisonFilters: tab === 'compare' ? comparisonFilters : null,
     });
-  }, [electionId, requestedElectionId, mode, partyFilter, selectedId, tab, compareId, query, scenario, projection]);
+  }, [electionId, requestedElectionId, mode, partyFilter, regionFilter, selectedId, tab, compareId, query, scenario, projectionAvailable, comparisonFilters, compatibleComparisonsOnly]);
 
   /**
    * The map's metric lives on the boundary feature properties, while the seat
@@ -295,7 +432,7 @@ export default function App() {
     for (const f of boundaries.features) {
       const baseSeat = seatsById.get(f.properties.id);
       if (!baseSeat) continue;
-      const seat = projection ? (scenarioSeatsById.get(f.properties.id) || baseSeat) : baseSeat;
+      const seat = projectionAvailable && electionId === '2024' ? (scenarioSeatsById.get(f.properties.id) || baseSeat) : baseSeat;
       // For census modes, the metric values live on the seat record, not the
       // boundary feature properties. Pass the seat so pickMetric can read them.
       const metricSource = seat;
@@ -315,17 +452,20 @@ export default function App() {
   useEffect(() => {
     layersRef.current.forEach((layer, id) => {
       const seat = mapSeats.get(id);
-      const dimmed = partyFilter && seat?.partyGroup !== partyFilter;
+      const outsideRegion = regionFilter && seat?.region !== regionFilter;
+      const outsideParty = partyFilter && seat?.partyGroup !== partyFilter;
+      const outsideQuery = regionFilter && !matchesSeatQuery(seat, query);
+      const hiddenByScope = outsideRegion || (outsideParty && Boolean(regionFilter)) || outsideQuery;
       const isSelected = selected?.id === id;
       layer.setStyle({
         fillColor: colourFor(seat, mode),
-        fillOpacity: isSelected ? 0.95 : dimmed ? 0.1 : 0.72,
-        weight: isSelected ? 2.5 : mode === 'winner' ? 1 : 0.5,
-        color: isSelected ? '#ffffff' : mode === 'winner' ? '#c9cfdb' : '#0f1115',
+        fillOpacity: hiddenByScope ? 0 : isSelected ? 0.95 : outsideParty ? 0.1 : 0.72,
+        weight: hiddenByScope ? 0 : isSelected ? 2.5 : mode === 'winner' ? 1 : 0.5,
+        color: hiddenByScope ? 'transparent' : isSelected ? '#ffffff' : mode === 'winner' ? '#c9cfdb' : '#0f1115',
       });
       if (isSelected) layer.bringToFront();
     });
-  }, [mode, partyFilter, selected, mapSeats]);
+  }, [mode, partyFilter, regionFilter, query, selected, mapSeats]);
 
   // Apply the initial style once features are first added.
   const onEachFeature = useCallback((feature, layer) => {
@@ -345,16 +485,25 @@ export default function App() {
     layer.bindTooltip(feature.properties.name, { sticky: true, direction: 'top' });
     layer.on({
       click: () => {
-        const s = seatsById.get(id);
+        const baseSeat = seatsByIdRef.current.get(id) || seat;
+        if (regionFilterRef.current && (baseSeat?.region !== regionFilterRef.current
+          || partyFilterRef.current && baseSeat?.partyGroup !== partyFilterRef.current
+          || !matchesSeatQuery(baseSeat, queryRef.current))) return;
+        const s = projectionAvailableRef.current && electionId === '2024'
+          ? (scenarioSeatsByIdRef.current.get(id) || baseSeat) : baseSeat;
         if (s) { setSelected({ ...s, centre: centres.get(s.id) }); setTab('seat'); }
       },
     });
-  }, [mapSeats, seatsById, centres, mode, setSelected, electionId]);
+  }, [mapSeats, seatsById, scenarioSeatsById, projectionAvailable, centres, mode, setSelected, electionId]);
 
-  const listSeats = useMemo(() => {
+  const allListSeats = useMemo(() => {
     if (!seats) return [];
     return seats.map((s) => ({ ...s, centre: centres.get(s.id) }));
   }, [seats, centres]);
+  const listSeats = useMemo(() => allListSeats.filter((seat) => (
+    (!regionFilter || seat.region === regionFilter)
+    && (!partyFilter || seat.partyGroup === partyFilter)
+  )), [allListSeats, regionFilter, partyFilter]);
 
   if (status === 'error') {
     return (
@@ -373,19 +522,17 @@ export default function App() {
     return <div className="fallback"><h1>Loading results…</h1></div>;
   }
 
-  const counts = partyFilter
-    ? listSeats.filter((s) => s.partyGroup === partyFilter).length
-    : listSeats.length;
-  const historyDataById = {
-    '2010': electionId === '2010' ? seats : historyFiles[0].data,
-    '2015': electionId === '2015' ? seats : historyFiles[1].data,
-    '2017': electionId === '2017' ? seats : historyFiles[2].data,
-    '2019': electionId === '2019' ? seats : historyFiles[3].data,
-    '2019-notional-2024': electionId === '2019-notional-2024' ? seats : historyFiles[4].data,
-    '2024': electionId === '2024' ? seats : historyFiles[5].data,
-  };
+  const counts = listSeats.length;
+  const scopedCount = regionFilter ? listSeats.filter((seat) => matchesSeatQuery(seat, query)).length : counts;
   const historyElections = manifest?.elections || [];
-  const historyResultSets = historyElections.map((item) => historyDataById[item.id] || []);
+  const comparisonChoices = filterComparisonChoices(historyElections, election, compatibleComparisonsOnly);
+  const historyResultSets = historyElections.map((item) => (
+    item.id === electionId ? seats : resultRows(historyFiles.data[item.id]) || []
+  ));
+  const historyCrosswalks = historyCrosswalkDescriptors.map((item) => {
+    const data = historyCrosswalkFiles.data[item.id];
+    return data ? { ...item, ...data } : null;
+  }).filter(Boolean);
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -396,7 +543,7 @@ export default function App() {
   };
 
   return (
-    <div className="App">
+    <div className={tab === 'compare' ? 'App comparison-app' : ['scenario', 'polling', 'backtest'].includes(tab) ? 'App scenario-app' : 'App'}>
       <header>
         <div className="title">
           <h1>Genny Tracks</h1>
@@ -423,10 +570,12 @@ export default function App() {
             </select>
           </label>
           <button type="button" className="header-action" onClick={handleCopyLink}>Copy link</button>
-          <button type="button" className="header-action" onClick={() => downloadCsv(projection ? scenarioSeats : listSeats, election, projection)}>Export CSV</button>
+          <button type="button" className="header-action" disabled={(tab === 'compare' && (!comparisonSeats || !comparisonDescriptor || Boolean(comparisonError))) || (tab === 'scenario' && (!scenarioComplete || Boolean(scenarioError)))} onClick={() => tab === 'compare'
+            ? downloadComparisonCsv(comparisonModel, comparisonPairs, election, comparisonDescriptor, comparisonFilters)
+            : downloadCsv((projectionAvailable || tab === 'scenario') ? scenarioSeats : listSeats, tab === 'scenario' ? scenarioDescriptor : election, projectionAvailable || tab === 'scenario', (projectionAvailable || tab === 'scenario') ? scenario : null)}>{tab === 'compare' ? 'Export comparison' : 'Export CSV'}</button>
         </div>
 
-        <nav className="modes" aria-label="Map shading">
+        {tab !== 'compare' && <nav className="modes" aria-label="Map shading">
           {censusModes.map((m) => (
             <button
               key={m.id}
@@ -439,7 +588,7 @@ export default function App() {
               {m.label}
             </button>
           ))}
-        </nav>
+        </nav>}
         {shareStatus && <span className="share-status" role="status">{shareStatus}</span>}
       </header>
 
@@ -452,6 +601,8 @@ export default function App() {
             ['history', 'History'],
             ['compare', 'Compare'],
             ['scenario', 'Scenario'],
+            ['polling', 'Polling'],
+            ['backtest', 'Backtest'],
             ['list', 'All seats'],
           ].map(([id, label]) => (
             <button
@@ -467,12 +618,11 @@ export default function App() {
           ))}
         </div>
 
-        {partyFilter && (
+        {(partyFilter || regionFilter) && tab !== 'compare' && (
           <div className="filter-banner">
-            <span>Showing {counts} {partyFilter} seats</span>
-            <button type="button" className="link" onClick={() => setPartyFilter(null)}>
-              Clear
-            </button>
+            <span>{regionFilter ? `Showing ${scopedCount} ${regionFilter} seats` : `Showing ${counts} ${partyFilter} seats`}{regionFilter && partyFilter ? ` · ${partyFilter}` : ''}</span>
+            {regionFilter && <button type="button" className="link" onClick={() => setRegionFilter(null)}>Clear region</button>}
+            {partyFilter && <button type="button" className="link" onClick={() => setPartyFilter(null)}>Clear party</button>}
           </div>
         )}
 
@@ -483,6 +633,9 @@ export default function App() {
               election={election}
               activeParty={partyFilter}
               onSelectParty={(p) => setPartyFilter((cur) => (cur === p ? null : p))}
+              activeRegion={regionFilter}
+              onSelectRegion={(region) => setRegionFilter(region)}
+              onClearRegion={() => setRegionFilter(null)}
             />
           )}
           {tab === 'census' && (
@@ -497,7 +650,7 @@ export default function App() {
             />
           )}
           {tab === 'seat' && (
-            <SeatPanel seat={selected} election={election} onClose={() => setSelected(null)} />
+            <SeatPanel seat={selected} election={election} onClose={() => setSelected(null)} scenarioSeat={projectionAvailable && electionId === '2024' ? scenarioSeatsById.get(selected?.id) : null} />
           )}
           {tab === 'list' && (
             <SeatList
@@ -513,63 +666,122 @@ export default function App() {
               seat={selected}
               election={election}
               elections={historyElections}
+              boundarySets={manifest?.boundarySets || []}
               resultSets={historyResultSets}
-              crosswalk={crosswalkFile.data?.overlaps || []}
+              crosswalks={historyCrosswalks}
               onSelectElection={(id) => { setRequestedElectionId(id); setTab('seat'); }}
-              onSelectPlace={(id, year) => { setSelectedId(id); setRequestedElectionId(year); setTab('history'); }}
+              onSelectPlace={(id, boundarySetId) => {
+                const linkedElection = historyElections
+                  .filter((item) => item.boundarySetId === boundarySetId)
+                  .sort((a, b) => b.year - a.year || Number(a.isNotional) - Number(b.isNotional))[0];
+                if (!linkedElection) return;
+                setSelectedId(id);
+                setRequestedElectionId(linkedElection.id);
+                setTab('history');
+              }}
             />
           )}
           {tab === 'compare' && (
             <>
               <label className="compare-picker">
                 <span>Compare with</span>
-                <select value={compareId} onChange={(event) => setCompareId(event.target.value)}>
-                  {historyElections.filter((item) => item.id !== electionId).map((item) => (
-                  <option key={item.id} value={item.id}>{item.label}</option>
+                <select aria-label="Compare with" value={compareId} onChange={(event) => setCompareId(event.target.value)}>
+                  {!comparisonChoices.length && <option value="">No other compatible election</option>}
+                  {comparisonChoices.map((item) => (
+                  <option key={item.id} value={item.id}>{item.label} · {item.compatibilityLabel}</option>
                   ))}
                 </select>
               </label>
+              <label className="comparison-check compatible-comparisons-toggle">
+                <input type="checkbox" checked={compatibleComparisonsOnly} onChange={(event) => setCompatibleComparisonsOnly(event.target.checked)} />
+                Same boundary set only
+              </label>
               <ComparePanel
                 election={election}
-                summary={summary}
                 seats={seats}
                 comparison={comparisonDescriptor}
-                comparisonSummary={comparisonSummaryFile.data}
-                comparisonSeats={comparisonSeatsFile.data}
-                onSelectSeat={(seat) => { setSelected(seat); setTab('seat'); }}
+                comparisonSeats={comparisonSeats}
+                model={comparisonModel} pairs={comparisonPairs}
+                filters={comparisonFilters} onFilters={setComparisonFilters}
+                boundaries={boundaries} comparisonBoundaries={comparisonBoundaries}
+                boundarySets={manifest?.boundarySets || []} sources={manifest?.sources || []}
+                error={comparisonError}
+                onSelectSeat={(seat, selectedElectionId = electionId) => {
+                  setRequestedElectionId(selectedElectionId);
+                  setSelectedId(seat?.id || null);
+                  setTab('seat');
+                }}
               />
             </>
           )}
           {tab === 'scenario' && (
             <ScenarioLab
-              election={election}
-              seats={seats}
+              election={scenarioDescriptor}
+              seats={scenarioBaseSeats || []}
+              baseline={scenarioBaseline}
+              regionBaselines={scenarioBaselineSet.regional}
+              baselineByGeography={scenarioBaselineSet.byGeography}
               scenario={scenario}
+              scenarioSeats={scenarioSeats}
               onChange={setScenario}
               onApply={(enabled) => { setProjection(enabled); if (enabled) setMode('winner'); }}
-              applied={projection}
+              applied={projectionAvailable}
+              canApplyMap={electionId === '2024'}
+              scenarioError={scenarioError}
+              onSelectSeat={(seat) => { setSelectedId(seat?.id || null); setProjection(true); setMode('winner'); setTab('seat'); }}
             />
           )}
+          {tab === 'polling' && <PollingPanel
+            data={pollsFile.data}
+            scenarioBaseline={scenarioBaselineSet.byGeography.GB}
+            onUseScenario={(nextScenario) => { setScenario(nextScenario); setProjection(false); setTab('scenario'); }}
+          />}
+          {tab === 'backtest' && <BacktestPanel
+            elections={historyElections}
+            files={backtestFiles.data}
+            polls={pollsFile.data}
+          />}
         </div>
       </aside>
 
-      <main className="map">
-        <MapContainer bounds={HOME_BOUNDS} scrollWheelZoom className="leaflet-host">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      <main className={tab === 'compare' ? 'map comparison-mode' : 'map'}>
+        {tab === 'compare' ? (
+          <ComparisonMaps
+            election={election}
+            comparison={comparisonDescriptor}
+            boundaries={boundaries}
+            comparisonBoundaries={comparisonBoundaries}
+            seats={seats}
+            comparisonSeats={comparisonSeats}
+            area={comparisonFilters.area} visibleIds={comparisonVisibleIds}
+            error={comparisonError}
+            onSelectSeat={(seat, selectedElectionId) => {
+              setRequestedElectionId(selectedElectionId);
+              setSelectedId(seat?.id || null);
+              setTab('seat');
+            }}
           />
-          <FitBounds electionId={electionId} />
-          <FlyToSeat seat={selected} />
-          {boundaries && <GeoJSON key={electionId} data={boundaries} onEachFeature={onEachFeature} />}
-        </MapContainer>
-
-        <div className="map-overlay">
-          <ModeLegend mode={mode} summary={summary} />
-          {projection && <p className="projection-flag">Uniform swing illustration</p>}
-        </div>
-
-        {boundaryLoading(boundaries) && <div className="loading">Loading boundaries…</div>}
+        ) : (
+          <>
+            <MapContainer bounds={UK_IRELAND_BOUNDS} maxBounds={UK_IRELAND_BOUNDS} maxBoundsViscosity={1} scrollWheelZoom className="leaflet-host">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                bounds={UK_IRELAND_BOUNDS}
+                noWrap
+                keepBuffer={1}
+              />
+              <FitBounds electionId={electionId} />
+              <FlyToSeat seat={selected} />
+              {boundaries && <GeoJSON key={electionId} data={boundaries} onEachFeature={onEachFeature} />}
+            </MapContainer>
+            <div className="map-overlay">
+              <ModeLegend mode={mode} summary={summary} election={election} />
+              {projectionAvailable && <p className="projection-flag">2024 {scenarioGeography === 'NI' ? 'Northern Ireland' : scenarioGeography === 'UK' ? 'UK-wide' : 'Great Britain'} scenario</p>}
+            </div>
+            {boundaryLoading(boundaries) && <div className="loading">Loading boundaries…</div>}
+          </>
+        )}
       </main>
     </div>
   );
@@ -577,4 +789,11 @@ export default function App() {
 
 function boundaryLoading(boundaries) {
   return !boundaries;
+}
+
+function matchesSeatQuery(seat, query) {
+  const q = String(query || '').trim().toLowerCase();
+  if (!q) return true;
+  return [seat?.name, seat?.member, seat?.partyGroup, seat?.region]
+    .some((value) => String(value || '').toLowerCase().includes(q));
 }

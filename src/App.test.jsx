@@ -11,8 +11,23 @@ vi.mock('react-leaflet', async () => {
     __esModule: true,
     MapContainer: ({ children }) => React.createElement('div', null, children),
     TileLayer: () => null,
-    GeoJSON: () => React.createElement('div', { 'data-testid': 'geojson' }),
-    useMap: () => ({ fitBounds: () => {}, flyTo: () => {}, getZoom: () => 6 }),
+    GeoJSON: ({ data, onEachFeature }) => React.createElement('div', { 'data-testid': 'geojson' },
+      (data?.features || []).map((feature) => {
+        let click;
+        const layer = {
+          setStyle: () => {},
+          bindTooltip: () => {},
+          bringToFront: () => {},
+          on: (events) => { click = events.click; },
+        };
+        onEachFeature?.(feature, layer);
+        return React.createElement('div', {
+          key: feature.properties.id,
+          'data-testid': `map-seat-${feature.properties.id}`,
+          onClick: () => click?.(),
+        });
+      })),
+    useMap: () => ({ fitBounds: () => {}, flyTo: () => {}, getZoom: () => 6, on: () => {}, off: () => {}, setView: () => {}, getCenter: () => ({ lat: 55, lng: -3 }) }),
   };
 });
 vi.mock('leaflet/dist/leaflet.css', () => ({}));
@@ -84,7 +99,7 @@ const BOUNDARIES = {
 const MANIFEST = {
   defaultElection: '2024',
   elections: [{
-    id: '2024', year: 2024, label: '2024', boundarySetId: '2024',
+    id: '2024', year: 2024, label: '2024', boundarySetId: '2024', candidateDataGranularity: 'candidate',
     resultsFile: 'elections/2024.json', summaryFile: 'elections/2024-summary.json',
     boundariesFile: 'boundaries/2024.geojson',
   }],
@@ -142,6 +157,44 @@ test('clicking a seat bar filters the map and shows a banner', async () => {
   await waitFor(() => expect(screen.getByText(/Showing 1 Reform UK seats/i)).toBeInTheDocument());
 });
 
+test('regional overview selection filters the seat list and survives the shared URL', async () => {
+  const scotland = {
+    ...SEAT, id: 'glasgow-example', name: 'Glasgow Example', region: 'Scotland',
+    party: 'Labour', partyGroup: 'Labour', member: 'Example MP', colour: '#E4003B',
+  };
+  const manifest = { ...MANIFEST };
+  const summary = { ...SUMMARY, regions: [...SUMMARY.regions, { region: 'Scotland', seats: 1 }] };
+  global.fetch = vi.fn((url) => {
+    const data = url.includes('manifest.json') ? manifest
+      : url.includes('summary') ? summary
+        : url.includes('geojson') ? { ...BOUNDARIES, features: [...BOUNDARIES.features, {
+          ...BOUNDARIES.features[0], properties: { id: scotland.id, name: scotland.name },
+        }] }
+          : [SEAT, scotland];
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+  });
+  const first = render(<App />);
+
+  const region = await screen.findByRole('button', { name: /Scotland/ });
+  fireEvent.click(region);
+  expect(region).toHaveAttribute('aria-pressed', 'true');
+  await waitFor(() => expect(screen.getByText(/Showing 1 Scotland seats/)).toBeInTheDocument());
+  await waitFor(() => expect(new URLSearchParams(window.location.search).get('region')).toBe('Scotland'));
+
+  fireEvent.click(screen.getByRole('tab', { name: 'All seats' }));
+  expect(screen.getByText('1 seats')).toBeInTheDocument();
+  expect(screen.getByText('Glasgow Example')).toBeInTheDocument();
+  expect(screen.queryByText('Boston and Skegness')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('row', { name: /Glasgow Example/ }));
+  expect(screen.getByRole('heading', { name: 'Glasgow Example' })).toBeInTheDocument();
+
+  first.unmount();
+  window.history.replaceState({}, '', '/?election=2024&region=Scotland');
+  render(<App />);
+  expect(await screen.findByRole('button', { name: /Scotland/ })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText(/Showing 1 Scotland seats/)).toBeInTheDocument();
+});
+
 test('the seat panel renders vote arithmetic and candidates', async () => {
   mockFetch();
   render(<App />);
@@ -174,6 +227,63 @@ test('the seat panel renders vote arithmetic and candidates', async () => {
   // Swing is shown in percentage points, and the sitting-MP badge is set.
   expect(screen.getByText('-43.0')).toBeInTheDocument();
   expect(screen.getByTitle('Was an MP before this election')).toBeInTheDocument();
+});
+
+test('an applied scenario shows its changed winner on the selected seat and can be removed', async () => {
+  mockFetch();
+  render(<App />);
+
+  fireEvent.click(await screen.findByRole('tab', { name: 'Scenario' }));
+  fireEvent.change(await screen.findByLabelText('Requested share for Conservative'), { target: { value: '100' } });
+  fireEvent.change(screen.getByLabelText('Requested share for Reform UK'), { target: { value: '0' } });
+  expect(await screen.findByText(/Input total: 100\.0%/)).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Show scenario on map' }));
+  await waitFor(() => expect(new URLSearchParams(window.location.search).get('projection')).toBe('1'));
+
+  fireEvent.click(screen.getByRole('tab', { name: 'All seats' }));
+  fireEvent.click(await screen.findByRole('row', { name: /Boston and Skegness/ }));
+  expect(screen.getByRole('heading', { name: 'Projected result · Boston and Skegness' })).toBeInTheDocument();
+  expect(screen.getByText('Projected winner:')).toBeInTheDocument();
+  expect(screen.getByText('Conservative', { selector: 'strong' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Scenario' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Remove scenario from map' }));
+  await waitFor(() => expect(new URLSearchParams(window.location.search).has('projection')).toBe(false));
+  fireEvent.click(screen.getByRole('tab', { name: 'Boston and Skegness' }));
+  expect(screen.queryByRole('heading', { name: 'Projected result · Boston and Skegness' })).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Boston and Skegness' })).toBeInTheDocument();
+});
+
+test('applying a projection updates a seat that was already selected', async () => {
+  mockFetch();
+  render(<App />);
+
+  fireEvent.click(await screen.findByRole('tab', { name: 'All seats' }));
+  fireEvent.click(await screen.findByRole('row', { name: /Boston and Skegness/ }));
+  expect(screen.getByRole('heading', { name: 'Boston and Skegness' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('tab', { name: 'Scenario' }));
+  fireEvent.change(await screen.findByLabelText('Requested share for Conservative'), { target: { value: '100' } });
+  fireEvent.change(screen.getByLabelText('Requested share for Reform UK'), { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Show scenario on map' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Boston and Skegness' }));
+
+  expect(await screen.findByRole('heading', { name: 'Projected result · Boston and Skegness' })).toBeInTheDocument();
+  expect(screen.getByText('Conservative', { selector: 'strong' })).toBeInTheDocument();
+});
+
+test('selecting a seat on the map keeps its applied projected result', async () => {
+  mockFetch();
+  render(<App />);
+
+  fireEvent.click(await screen.findByRole('tab', { name: 'Scenario' }));
+  fireEvent.change(await screen.findByLabelText('Requested share for Conservative'), { target: { value: '100' } });
+  fireEvent.change(screen.getByLabelText('Requested share for Reform UK'), { target: { value: '0' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Show scenario on map' }));
+
+  fireEvent.click(await screen.findByTestId('map-seat-boston and skegness'));
+  expect(await screen.findByRole('heading', { name: 'Projected result · Boston and Skegness' })).toBeInTheDocument();
+  expect(screen.getByText('Conservative', { selector: 'strong' })).toBeInTheDocument();
 });
 
 test('searching filters the seat list', async () => {
@@ -209,4 +319,62 @@ test('reports a helpful error when the data layer is missing', async () => {
 
   await waitFor(() => expect(screen.getByText(/Data unavailable/i)).toBeInTheDocument());
   expect(screen.getByText(/npm run build:data/)).toBeInTheDocument();
+});
+
+test('restores a filtered comparison URL and keeps controls and link state synchronized', async () => {
+  const older = { ...MANIFEST.elections[0], id: '2019-notional', label: '2019 notional', year: 2019, isNotional: true,
+    resultsFile: 'elections/2019-notional.json' };
+  const manifest = { ...MANIFEST, elections: [...MANIFEST.elections, older] };
+  window.history.replaceState({}, '', '/?election=2024&view=compare&compare=2019-notional&compareArea=East%20Midlands&compareChanges=0&compareQuery=Boston');
+  global.fetch = vi.fn((url) => {
+    const data = url.includes('manifest.json') ? manifest : url.includes('summary') ? SUMMARY
+      : url.includes('geojson') ? BOUNDARIES : url.includes('2019-notional.json') ? [{ ...SEAT, partyGroup: 'Conservative' }] : [SEAT];
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+  });
+  render(<App />);
+  await screen.findByRole('heading', { name: /2024 versus 2019 notional/ });
+  expect(screen.getByLabelText('Area')).toHaveValue('East Midlands');
+  expect(screen.getByLabelText('Winner changes only')).not.toBeChecked();
+  expect(screen.getByRole('searchbox', { name: 'Search comparison seats or parties' })).toHaveValue('Boston');
+  expect(screen.getByRole('button', { name: 'Export comparison' })).toBeEnabled();
+  fireEvent.click(screen.getByLabelText('Winner changes only'));
+  await waitFor(() => expect(new URLSearchParams(window.location.search).has('compareChanges')).toBe(false));
+  fireEvent.click(screen.getByRole('button', { name: /Boston and Skegness/ }));
+  expect(screen.getByRole('heading', { name: 'Boston and Skegness' })).toBeInTheDocument();
+});
+
+test('comparison picker labels boundaries, filters choices, and falls back when filtering the selection', async () => {
+  const notional = {
+    ...MANIFEST.elections[0], id: '2019-notional-2024', label: '2019 notional · 2024 boundaries',
+    year: 2019, isNotional: true, resultsFile: 'elections/2019-notional-2024.json',
+  };
+  const older = {
+    ...MANIFEST.elections[0], id: '2019', label: '2019', year: 2019,
+    boundarySetId: '2010', resultsFile: 'elections/2019.json',
+  };
+  const manifest = { ...MANIFEST, elections: [...MANIFEST.elections, notional, older] };
+  window.history.replaceState({}, '', '/?election=2024&view=compare&compare=2019&compareCompatible=1');
+  global.fetch = vi.fn((url) => {
+    const data = url.includes('manifest.json') ? manifest : url.includes('summary') ? SUMMARY
+      : url.includes('geojson') ? BOUNDARIES
+        : url.includes('2019-notional-2024.json') || url.includes('2019.json') ? [{ ...SEAT }] : [SEAT];
+    return Promise.resolve({ ok: true, json: () => Promise.resolve(data) });
+  });
+  render(<App />);
+
+  const picker = await screen.findByLabelText('Compare with');
+  await waitFor(() => expect(picker).toHaveValue('2019-notional-2024'));
+  expect(screen.getByRole('option', { name: /Same boundaries/ })).toBeInTheDocument();
+  expect(screen.getByLabelText('Same boundary set only')).toBeChecked();
+
+  fireEvent.click(screen.getByLabelText('Same boundary set only'));
+  await waitFor(() => expect(new URLSearchParams(window.location.search).has('compareCompatible')).toBe(false));
+  expect(screen.getByRole('option', { name: /Different boundaries/ })).toBeInTheDocument();
+  fireEvent.change(picker, { target: { value: '2019' } });
+  await waitFor(() => expect(picker).toHaveValue('2019'));
+  expect(await screen.findByText(/different constituency boundaries/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText('Same boundary set only'));
+  await waitFor(() => expect(picker).toHaveValue('2019-notional-2024'));
+  await waitFor(() => expect(new URLSearchParams(window.location.search).get('compareCompatible')).toBe('1'));
 });

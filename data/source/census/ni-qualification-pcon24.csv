@@ -1,0 +1,145 @@
+Parliamentary Constituency 2024 Code,Parliamentary Constituency 2024 Label,Qualifications (Highest Level) Code,Qualifications (Highest Level) Label,Count
+N05000001,Belfast East,0,No qualifications,17565
+N05000001,Belfast East,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5036
+N05000001,Belfast East,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",10473
+N05000001,Belfast East,3,Apprenticeship,4898
+N05000001,Belfast East,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",11799
+N05000001,Belfast East,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",31370
+N05000001,Belfast East,6,"Other: Other qualifications, equivalent unknown",1883
+N05000001,Belfast East,-8,No code required,19255
+N05000002,Belfast North,0,No qualifications,23160
+N05000002,Belfast North,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5789
+N05000002,Belfast North,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",12243
+N05000002,Belfast North,3,Apprenticeship,5006
+N05000002,Belfast North,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13242
+N05000002,Belfast North,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",23040
+N05000002,Belfast North,6,"Other: Other qualifications, equivalent unknown",1910
+N05000002,Belfast North,-8,No code required,22099
+N05000003,Belfast South and Mid Down,0,No qualifications,14430
+N05000003,Belfast South and Mid Down,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",3790
+N05000003,Belfast South and Mid Down,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",8903
+N05000003,Belfast South and Mid Down,3,Apprenticeship,3579
+N05000003,Belfast South and Mid Down,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",19464
+N05000003,Belfast South and Mid Down,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",48601
+N05000003,Belfast South and Mid Down,6,"Other: Other qualifications, equivalent unknown",2079
+N05000003,Belfast South and Mid Down,-8,No code required,18704
+N05000004,Belfast West,0,No qualifications,24982
+N05000004,Belfast West,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5616
+N05000004,Belfast West,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",12239
+N05000004,Belfast West,3,Apprenticeship,4631
+N05000004,Belfast West,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",12362
+N05000004,Belfast West,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",18841
+N05000004,Belfast West,6,"Other: Other qualifications, equivalent unknown",1535
+N05000004,Belfast West,-8,No code required,22971
+N05000005,East Antrim,0,No qualifications,16713
+N05000005,East Antrim,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5354
+N05000005,East Antrim,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11551
+N05000005,East Antrim,3,Apprenticeship,5403
+N05000005,East Antrim,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13333
+N05000005,East Antrim,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",25088
+N05000005,East Antrim,6,"Other: Other qualifications, equivalent unknown",1903
+N05000005,East Antrim,-8,No code required,17606
+N05000006,East Londonderry,0,No qualifications,21291
+N05000006,East Londonderry,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4916
+N05000006,East Londonderry,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11585
+N05000006,East Londonderry,3,Apprenticeship,5291
+N05000006,East Londonderry,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13453
+N05000006,East Londonderry,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",24917
+N05000006,East Londonderry,6,"Other: Other qualifications, equivalent unknown",1746
+N05000006,East Londonderry,-8,No code required,20086
+N05000007,Fermanagh and South Tyrone,0,No qualifications,23741
+N05000007,Fermanagh and South Tyrone,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4857
+N05000007,Fermanagh and South Tyrone,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11646
+N05000007,Fermanagh and South Tyrone,3,Apprenticeship,5427
+N05000007,Fermanagh and South Tyrone,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",12800
+N05000007,Fermanagh and South Tyrone,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",26591
+N05000007,Fermanagh and South Tyrone,6,"Other: Other qualifications, equivalent unknown",2316
+N05000007,Fermanagh and South Tyrone,-8,No code required,24412
+N05000008,Foyle,0,No qualifications,20707
+N05000008,Foyle,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4418
+N05000008,Foyle,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",10181
+N05000008,Foyle,3,Apprenticeship,3859
+N05000008,Foyle,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",12251
+N05000008,Foyle,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",23837
+N05000008,Foyle,6,"Other: Other qualifications, equivalent unknown",1346
+N05000008,Foyle,-8,No code required,20706
+N05000009,Lagan Valley,0,No qualifications,16902
+N05000009,Lagan Valley,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5454
+N05000009,Lagan Valley,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",12306
+N05000009,Lagan Valley,3,Apprenticeship,5523
+N05000009,Lagan Valley,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",14073
+N05000009,Lagan Valley,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",32632
+N05000009,Lagan Valley,6,"Other: Other qualifications, equivalent unknown",2025
+N05000009,Lagan Valley,-8,No code required,23094
+N05000010,Mid Ulster,0,No qualifications,21354
+N05000010,Mid Ulster,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4292
+N05000010,Mid Ulster,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",10916
+N05000010,Mid Ulster,3,Apprenticeship,6021
+N05000010,Mid Ulster,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",12741
+N05000010,Mid Ulster,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",24140
+N05000010,Mid Ulster,6,"Other: Other qualifications, equivalent unknown",1608
+N05000010,Mid Ulster,-8,No code required,24158
+N05000011,Newry and Armagh,0,No qualifications,22553
+N05000011,Newry and Armagh,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4435
+N05000011,Newry and Armagh,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11527
+N05000011,Newry and Armagh,3,Apprenticeship,6152
+N05000011,Newry and Armagh,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13332
+N05000011,Newry and Armagh,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",26227
+N05000011,Newry and Armagh,6,"Other: Other qualifications, equivalent unknown",1965
+N05000011,Newry and Armagh,-8,No code required,25556
+N05000012,North Antrim,0,No qualifications,22654
+N05000012,North Antrim,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4874
+N05000012,North Antrim,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11645
+N05000012,North Antrim,3,Apprenticeship,5954
+N05000012,North Antrim,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13007
+N05000012,North Antrim,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",23153
+N05000012,North Antrim,6,"Other: Other qualifications, equivalent unknown",2009
+N05000012,North Antrim,-8,No code required,20537
+N05000013,North Down,0,No qualifications,13786
+N05000013,North Down,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5025
+N05000013,North Down,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11338
+N05000013,North Down,3,Apprenticeship,4704
+N05000013,North Down,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",12634
+N05000013,North Down,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",30547
+N05000013,North Down,6,"Other: Other qualifications, equivalent unknown",2025
+N05000013,North Down,-8,No code required,17840
+N05000014,South Antrim,0,No qualifications,17712
+N05000014,South Antrim,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5464
+N05000014,South Antrim,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",12674
+N05000014,South Antrim,3,Apprenticeship,5729
+N05000014,South Antrim,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",14326
+N05000014,South Antrim,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",26724
+N05000014,South Antrim,6,"Other: Other qualifications, equivalent unknown",1953
+N05000014,South Antrim,-8,No code required,21859
+N05000015,South Down,0,No qualifications,18243
+N05000015,South Down,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4330
+N05000015,South Down,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",11136
+N05000015,South Down,3,Apprenticeship,6791
+N05000015,South Down,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13541
+N05000015,South Down,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",26094
+N05000015,South Down,6,"Other: Other qualifications, equivalent unknown",1689
+N05000015,South Down,-8,No code required,23417
+N05000016,Strangford,0,No qualifications,17117
+N05000016,Strangford,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5446
+N05000016,Strangford,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",12024
+N05000016,Strangford,3,Apprenticeship,6245
+N05000016,Strangford,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",13264
+N05000016,Strangford,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",24052
+N05000016,Strangford,6,"Other: Other qualifications, equivalent unknown",1861
+N05000016,Strangford,-8,No code required,18145
+N05000017,Upper Bann,0,No qualifications,25118
+N05000017,Upper Bann,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",5903
+N05000017,Upper Bann,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",13511
+N05000017,Upper Bann,3,Apprenticeship,6190
+N05000017,Upper Bann,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",14442
+N05000017,Upper Bann,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",27743
+N05000017,Upper Bann,6,"Other: Other qualifications, equivalent unknown",2453
+N05000017,Upper Bann,-8,No code required,26679
+N05000018,West Tyrone,0,No qualifications,22596
+N05000018,West Tyrone,1,"Level 1: 1 to 4 GCSEs, O levels, CSEs (any grades); 1 AS Level; NVQ level 1; or equivalent",4380
+N05000018,West Tyrone,2,"Level 2: 5 or more GCSEs (A*-C or 9-4), O levels (passes) CSEs (grade 1); 1 A level, 2-3 AS Levels; NVQ level 2, BTEC General, City and Guilds Craft; or equivalent",10264
+N05000018,West Tyrone,3,Apprenticeship,4968
+N05000018,West Tyrone,4,"Level 3: 2 or more A Levels, 4 or more AS Levels; NVQ Level 3, BTEC National, OND, ONC, City and Guilds Advanced Craft; or equivalent",11940
+N05000018,West Tyrone,5,"Level 4 and above: Degree (BA, BSc), foundation degree, NVQ Level 4 and above, HND, HNC, professional qualifications (teaching or nursing, for example), or equivalent",22734
+N05000018,West Tyrone,6,"Other: Other qualifications, equivalent unknown",1561
+N05000018,West Tyrone,-8,No code required,21309
