@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "kind": "poll-ingest-staging",
-  "updatedAt": "2026-11-10",
+  "updatedAt": "2026-11-11",
   "promotedCount": 0,
   "provider": {
     "name": "BritPolls",
     "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
-    "providerUpdated": "2026-11-10",
+    "providerUpdated": "2026-11-11",
     "attribution": "Staged automatically from the BritPolls voting-intention dataset; see the app attribution for licence terms."
   },
   "reviewChecklist": [
@@ -1289,6 +1289,58 @@
         "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
         "providerUpdated": "2026-11-10",
         "ingestedAt": "2026-11-10"
+      }
+    },
+    {
+      "id": "britpolls-yougov-2026-11-09",
+      "pollster": "YouGov",
+      "date": "2026-11-09",
+      "sampleSize": 2437,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 27,
+        "Conservative": 21,
+        "Reform UK": 20,
+        "Liberal Democrats": 12,
+        "Green": 10,
+        "Scottish National Party": 3,
+        "Other": 2
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-11-11",
+        "ingestedAt": "2026-11-11"
+      }
+    },
+    {
+      "id": "britpolls-more-in-common-2026-11-09",
+      "pollster": "More in Common",
+      "date": "2026-11-09",
+      "sampleSize": 2013,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 28,
+        "Conservative": 25,
+        "Reform UK": 20,
+        "Liberal Democrats": 9,
+        "Green": 7,
+        "Scottish National Party": 3,
+        "Other": 1
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-11-11",
+        "ingestedAt": "2026-11-11"
       }
     }
   ]
