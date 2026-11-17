@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "kind": "poll-ingest-staging",
-  "updatedAt": "2026-11-16",
+  "updatedAt": "2026-11-17",
   "promotedCount": 0,
   "provider": {
     "name": "BritPolls",
     "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
-    "providerUpdated": "2026-11-16",
+    "providerUpdated": "2026-11-17",
     "attribution": "Staged automatically from the BritPolls voting-intention dataset; see the app attribution for licence terms."
   },
   "reviewChecklist": [
@@ -1419,6 +1419,32 @@
         "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
         "providerUpdated": "2026-11-14",
         "ingestedAt": "2026-11-14"
+      }
+    },
+    {
+      "id": "britpolls-deltapoll-2026-11-16",
+      "pollster": "Deltapoll",
+      "date": "2026-11-16",
+      "sampleSize": 2026,
+      "geography": "unverified",
+      "type": "voting-intention",
+      "shares": {
+        "Labour": 31,
+        "Conservative": 23,
+        "Reform UK": 25,
+        "Liberal Democrats": 7,
+        "Green": 8,
+        "Scottish National Party": 3,
+        "Other": 3
+      },
+      "sourceUrl": "https://britpolls.co.uk/data/voting-intention.json",
+      "sourceLevel": "provider dataset only",
+      "sourceNote": "Automatically ingested from the BritPolls voting-intention dataset. Geography, fieldwork dates, mode and an original publisher link are unverified; the row is excluded from the descriptive average until verified.",
+      "ingested": {
+        "provider": "BritPolls",
+        "datasetUrl": "https://britpolls.co.uk/data/voting-intention.json",
+        "providerUpdated": "2026-11-17",
+        "ingestedAt": "2026-11-17"
       }
     }
   ]
